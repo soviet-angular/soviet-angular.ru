@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>СОВЕТСКИЙ ANGULAR: ЧАТ ПРОГРЕССА</title>
+    <!-- Загрузка Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Шрифт Oswald для Constructivism -->
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap");
+
+      /* Используем Oswald для максимальной конструктивистской тяжести */
+      body {
+        font-family: "Oswald", sans-serif;
+        background-color: #000000; /* Черный фон */
+        color: #ffffff; /* Белый текст */
+        overflow-x: hidden; /* Избегаем горизонтального скролла */
+      }
+
+      /* Геометрический фон для секций (Черный фон с динамичным градиентом) */
+      .construct-bg {
+        background-color: #000000;
+        /* Наклонный градиент с четкими стопами: Черный, Красный, Желтый */
+        background-image: linear-gradient(
+          135deg,
+          #000000 0%,
+          #000000 30%,
+          #ff0000 30%,
+          #ff0000 50%,
+          #000000 50%,
+          #000000 70%,
+          #ffff00 70%,
+          #ffff00 100%
+        );
+      }
+
+      /* Новый стиль для добавления символики СССР в фон секции 3 */
+      .soviet-attributes {
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* Фоновый узор Серпа и Молота + Звезд (Красный) */
+      .soviet-attributes::before {
+        content: "★ ☭ ★ ☭ ★"; /* Использование Unicode символов */
+        position: absolute;
+        top: -50px;
+        left: 0;
+        width: 200%;
+        font-size: 150px;
+        color: #ff0000;
+        opacity: 0.15; /* Полупрозрачность */
+        z-index: 0;
+        letter-spacing: 50px;
+        transform: rotate(-10deg) translateX(-25%);
+        pointer-events: none; /* Чтобы не мешать кликам */
+      }
+
+      /* Фоновый узор Серпа и Молота + Звезд (Желтый) */
+      .soviet-attributes::after {
+        content: "☭ ★ ☭ ★ ☭"; /* Второй слой символов */
+        position: absolute;
+        bottom: -50px;
+        right: 0;
+        width: 200%;
+        font-size: 150px;
+        color: #ffff00;
+        opacity: 0.1; /* Меньшая полупрозрачность для глубины */
+        z-index: 0;
+        letter-spacing: 50px;
+        transform: rotate(15deg) translateX(25%);
+        pointer-events: none;
+      }
+
+      /* Классы для анимации при скролле */
+      .reveal-hidden {
+        opacity: 0;
+        transform: translateY(40px);
+        transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+      }
+      .reveal-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* Стиль для кнопки-призыва */
+      .cta-button {
+        transition: all 0.2s ease-in-out;
+        box-shadow: 0 0 0 4px #000000, 0 0 0 6px #ffff00;
+      }
+      .cta-button:hover {
+        transform: scale(1.05) rotate(-1deg);
+        box-shadow: 0 0 0 4px #ff0000, 0 0 0 6px #ffff00;
+      }
+
+      /* Декоративный диагональный разделитель */
+      .diagonal-divider {
+        height: 50px;
+        background-color: #ff0000;
+        clip-path: polygon(0 0, 100% 100%, 100% 50%, 0 50%);
+      }
+      .diagonal-divider-inverse {
+        height: 50px;
+        background-color: #ffff00;
+        clip-path: polygon(0 50%, 100% 0, 100% 100%, 0 100%);
+      }
+    </style>
+  </head>
+  <body class="antialiased">
+    <!-- Секция 1: Заголовок и Герой -->
+    <header
+      class="h-screen flex items-center justify-center text-center bg-red-700 relative overflow-hidden"
+    >
+      <!-- Геометрический задний план (Диагонали) -->
+      <div class="absolute inset-0 z-0 opacity-10">
+        <div
+          class="absolute top-0 left-0 w-full h-full bg-black skew-y-12 origin-top-left -translate-y-1/2"
+        ></div>
+        <div
+          class="absolute bottom-0 right-0 w-full h-full bg-yellow-400 -skew-y-12 origin-bottom-right translate-y-1/2"
+        ></div>
+      </div>
+
+      <div class="relative z-10 p-6 max-w-4xl mx-auto">
+        <h1
+          class="text-7xl md:text-9xl lg:text-[140px] font-extrabold leading-none text-white tracking-tighter reveal-hidden"
+        >
+          СОВЕТСКИЙ<br />ANGULAR
+        </h1>
+        <p
+          class="text-3xl md:text-5xl lg:text-6xl font-normal text-yellow-400 mt-4 reveal-hidden"
+          style="transition-delay: 0.2s"
+        >
+          ЧАТ ПРОГРЕССА И ЕДИНСТВА
+        </p>
+        <div class="mt-10 reveal-hidden" style="transition-delay: 0.4s">
+          <a
+            href="https://t.me/soviet_angular"
+            target="_blank"
+            class="inline-block cta-button bg-black text-white text-2xl md:text-3xl font-bold py-4 px-12 uppercase rounded-none hover:bg-red-800"
+          >
+            ВСТУПИТЬ В АРТЕЛЬ
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Диагональный разделитель -->
+    <div class="diagonal-divider"></div>
+
+    <!-- Секция 2: Манифест и Миссия (Использует новый градиентный фон) -->
+    <section class="py-20 construct-bg">
+      <div class="container mx-auto px-6 max-w-5xl relative z-10">
+        <div class="text-center reveal-hidden">
+          <!-- Заголовок: Желтый на Черном -->
+          <h2
+            class="text-5xl md:text-7xl font-extrabold text-yellow-400 mb-8 tracking-tighter"
+          >
+            ДЕЛО ОБЩЕЕ:<br />НАШ МАНИФЕСТ
+          </h2>
+        </div>
+        <!-- Основной текст: Белый на Сплошном Черном -->
+        <p
+          class="text-2xl md:text-3xl leading-relaxed text-white text-center reveal-hidden bg-black p-4 mx-auto max-w-xl"
+          style="transition-delay: 0.2s"
+        >
+          МЫ — АРТЕЛЬ КОДЕРОВ, ОБЪЕДИНЕННЫХ НЕ ТОЛЬКО ФРЕЙМВОРКОМ ANGULAR, НО И
+          ВЕЛИКИМ ДУХОМ ТОВАРИЩЕСТВА. ЗДЕСЬ ОБСУЖДАЕТСЯ ВСЕ: ОТ СЛОЖНЕЙШИХ
+          ПРОБЛЕМ В РАЗРАБОТКЕ ДО АБСОЛЮТНЫХ ФИЛОСОФСКИХ ВОПРОСОВ.
+        </p>
+        <!-- Акцентный текст: Желтый на Черном -->
+        <p
+          class="text-4xl md:text-5xl font-bold text-yellow-400 text-center mt-6 reveal-hidden"
+          style="transition-delay: 0.4s"
+        >
+          ГЛАВНОЕ — ПОДДЕРЖКА И ЕДИНСТВО!
+        </p>
+      </div>
+    </section>
+
+    <!-- Диагональный разделитель -->
+    <div class="diagonal-divider-inverse"></div>
+
+    <!-- Секция 3: Основные Направления (Фичи) + АТРИБУТЫ СССР В ФОНЕ -->
+    <section class="py-20 bg-black soviet-attributes">
+      <div class="container mx-auto px-6 max-w-6xl relative z-10">
+        <div class="text-center mb-16 reveal-hidden">
+          <h2
+            class="text-5xl md:text-7xl font-extrabold text-white tracking-tighter border-b-8 border-red-600 inline-block pb-2 px-4"
+          >
+            СТРОИМ БУДУЩЕЕ ВМЕСТЕ
+          </h2>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+          <!-- Блок 1: Офтоп -->
+          <div
+            class="bg-red-700 p-8 transform rotate-0 hover:rotate-2 transition duration-300 reveal-hidden"
+          >
+            <div class="text-6xl text-yellow-400 mb-4">★</div>
+            <h3 class="text-3xl font-extrabold mb-3 text-white">
+              ОФТОП: СВЯЗУЮЩАЯ НИТЬ
+            </h3>
+            <p class="text-lg text-white font-light">
+              ОБСУЖДАЙ ЧТО УГОДНО, МЫ ЗДЕСЬ СЕМЬЯ. ГЛАВНОЕ НЕ КОД, А ЧЕЛОВЕК!
+            </p>
+          </div>
+
+          <!-- Блок 2: Angular -->
+          <div
+            class="bg-white text-black p-8 transform rotate-0 hover:-rotate-2 transition duration-300 reveal-hidden"
+            style="transition-delay: 0.2s"
+          >
+            <div class="text-6xl text-red-600 mb-4">⚙</div>
+            <h3 class="text-3xl font-extrabold mb-3">
+              ANGULAR: ПЛАН ПЯТИЛЕТКИ
+            </h3>
+            <p class="text-lg font-light">
+              СОВЕТЫ ПО ФРЕЙМВОРКУ, КОТОРЫЕ СДВИНУТ ПРОЕКТЫ ВПЕРЕД. ОТ МЛАДШЕГО
+              ДО ВЕТЕРАНА.
+            </p>
+          </div>
+
+          <!-- Блок 3: Единство -->
+          <div
+            class="bg-yellow-400 text-black p-8 transform rotate-0 hover:rotate-3 transition duration-300 reveal-hidden"
+            style="transition-delay: 0.4s"
+          >
+            <div class="text-6xl text-red-600 mb-4">☭</div>
+            <h3 class="text-3xl font-extrabold mb-3">
+              ЕДИНСТВО: МОЩЬ КОЛЛЕКТИВА
+            </h3>
+            <p class="text-lg font-light">
+              НЕРАЗДЕЛИМОЕ ТОВАРИЩЕСТВО И ВЗАИМНАЯ ПОДДЕРЖКА — ГЛАВНЫЕ СИЛЫ В
+              РАЗВИТИИ.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Секция 4: Финальный призыв (Использует новый градиентный фон) -->
+    <section class="py-24 construct-bg border-t-8 border-yellow-400">
+      <div class="text-center reveal-hidden relative z-10">
+        <h2
+          class="text-5xl md:text-8xl font-extrabold text-yellow-400 mb-10 tracking-tighter"
+        >
+          НЕ ЖДИ ПРИКАЗА. ДЕЙСТВУЙ!
+        </h2>
+        <a
+          href="https://t.me/soviet_angular"
+          target="_blank"
+          class="inline-block cta-button bg-red-600 text-white text-3xl md:text-4xl font-bold py-5 px-16 uppercase rounded-none hover:bg-black reveal-hidden"
+          style="transition-delay: 0.2s"
+        >
+          ВСТУПИТЬ В АРТЕЛЬ
+        </a>
+      </div>
+    </section>
+
+    <!-- Футер -->
+    <footer class="bg-black py-8 border-t-4 border-red-600">
+      <div
+        class="container mx-auto px-6 text-center text-sm md:text-lg text-white opacity-75"
+      >
+        <p class="font-light reveal-hidden">
+          ЧАТ РАБОЧЕГО КЛАССА ПРОГРАММИСТОВ. АДРЕС:
+          <a
+            href="https://t.me/soviet_angular"
+            target="_blank"
+            class="text-yellow-400 hover:text-red-600 underline"
+            >T.ME/SOVIET_ANGULAR</a
+          >
+        </p>
+        <p class="font-light mt-1 reveal-hidden" style="transition-delay: 0.1s">
+          ВСЕ ВОПРОСЫ В ФОКУСЕ, КОМРАДЫ! 2025 ГОД. ПЛАН ВЫПОЛНЕН.
+        </p>
+      </div>
+    </footer>
+
+    <script>
+      // JavaScript для анимации элементов при скролле (IntersectionObserver)
+
+      const revealElements = document.querySelectorAll(".reveal-hidden");
+
+      // Конфигурация для наблюдателя: срабатывает, когда элемент виден на 10%
+      const observerOptions = {
+        root: null, // Относительно viewport
+        rootMargin: "0px",
+        threshold: 0.1, // 10% элемента должно быть видно
+      };
+
+      const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach((entry) => {
+          // Если элемент виден
+          if (entry.isIntersecting) {
+            // Добавляем класс, который запускает анимацию
+            entry.target.classList.add("reveal-visible");
+            // Перестаем наблюдать за элементом, чтобы анимация не повторялась
+            observer.unobserve(entry.target);
+          }
+        });
+      }, observerOptions);
+
+      // Начинаем наблюдение за всеми элементами
+      revealElements.forEach((el) => {
+        observer.observe(el);
+      });
+
+      // Дополнительный вызов для элементов в шапке, которые могут быть сразу видны
+      document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll(".reveal-hidden").forEach((el) => {
+          // Мгновенно показать элементы в верхней части экрана, если они уже видны
+          if (el.getBoundingClientRect().top < window.innerHeight) {
+            el.classList.add("reveal-visible");
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
