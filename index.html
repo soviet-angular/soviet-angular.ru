@@ -1,11 +1,19 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>СОВЕТСКИЙ ANGULAR: ЧАТ ПРОГРЕССА</title>    
+    <title>Советский Angular</title>
+    <link rel="icon" type="image/png" href="./assets/favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="./assets/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./assets/favicon/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Советы" />
+    <link rel="manifest" href="./assets/favicon/site.webmanifest" />
     <script src="./tailwindcss.js"></script>
-    <!-- Шрифт Oswald для Constructivism --><style>
+    <!-- Шрифт Oswald для Constructivism -->
+    <style>
         @font-face {
             font-family: 'Oswald';
             font-style: normal;
@@ -54,30 +62,31 @@
             src: url(./assets/fonts/Oswald/TK3iWkUHHAIjg752GT8G.woff2) format('woff2');
             unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
         }
-        
+
         /* Используем Oswald для максимальной конструктивистской тяжести */
         body {
             font-family: 'Oswald', sans-serif;
-            background-color: #000000; /* Черный фон */
-            color: #FFFFFF; /* Белый текст */
-            overflow-x: hidden; /* Избегаем горизонтального скролла */
+            background-color: #000000;
+            /* Черный фон */
+            color: #FFFFFF;
+            /* Белый текст */
+            overflow-x: hidden;
+            /* Избегаем горизонтального скролла */
         }
 
         /* Геометрический фон для секций (Черный фон с динамичным градиентом) */
         .construct-bg {
             background-color: #000000;
             /* Наклонный градиент с четкими стопами: Черный, Красный, Желтый */
-            background-image: linear-gradient(
-                135deg, 
-                #000000 0%, 
-                #000000 30%, 
-                #FF0000 30%, 
-                #FF0000 50%, 
-                #000000 50%, 
-                #000000 70%, 
-                #FFFF00 70%, 
-                #FFFF00 100%
-            );
+            background-image: linear-gradient(135deg,
+                    #000000 0%,
+                    #000000 30%,
+                    #FF0000 30%,
+                    #FF0000 50%,
+                    #000000 50%,
+                    #000000 70%,
+                    #FFFF00 70%,
+                    #FFFF00 100%);
         }
 
         /* Новый стиль для добавления символики СССР в фон секции 3 */
@@ -88,30 +97,35 @@
 
         /* Фоновый узор Серпа и Молота + Звезд (Красный) */
         .soviet-attributes::before {
-            content: "★ ☭ ★ ☭ ★"; /* Использование Unicode символов */
+            content: "★ ☭ ★ ☭ ★";
+            /* Использование Unicode символов */
             position: absolute;
             top: -50px;
             left: 0;
             width: 200%;
             font-size: 150px;
             color: #FF0000;
-            opacity: 0.15; /* Полупрозрачность */
+            opacity: 0.15;
+            /* Полупрозрачность */
             z-index: 0;
             letter-spacing: 50px;
             transform: rotate(-10deg) translateX(-25%);
-            pointer-events: none; /* Чтобы не мешать кликам */
+            pointer-events: none;
+            /* Чтобы не мешать кликам */
         }
 
         /* Фоновый узор Серпа и Молота + Звезд (Желтый) */
         .soviet-attributes::after {
-            content: "☭ ★ ☭ ★ ☭"; /* Второй слой символов */
+            content: "☭ ★ ☭ ★ ☭";
+            /* Второй слой символов */
             position: absolute;
             bottom: -50px;
             right: 0;
             width: 200%;
             font-size: 150px;
             color: #FFFF00;
-            opacity: 0.1; /* Меньшая полупрозрачность для глубины */
+            opacity: 0.1;
+            /* Меньшая полупрозрачность для глубины */
             z-index: 0;
             letter-spacing: 50px;
             transform: rotate(15deg) translateX(25%);
@@ -124,6 +138,7 @@
             transform: translateY(40px);
             transition: opacity 0.8s ease-out, transform 0.8s ease-out;
         }
+
         .reveal-visible {
             opacity: 1;
             transform: translateY(0);
@@ -134,17 +149,20 @@
             transition: all 0.2s ease-in-out;
             box-shadow: 0 0 0 4px #000000, 0 0 0 6px #FFFF00;
         }
+
         .cta-button:hover {
             transform: scale(1.05) rotate(-1deg);
             box-shadow: 0 0 0 4px #FF0000, 0 0 0 6px #FFFF00;
         }
-        
+
         /* Стиль для кнопки в футере */
         .footer-button {
             transition: background-color 0.2s, transform 0.1s;
         }
+
         .footer-button:hover {
-            background-color: #991b1b; /* red-800 */
+            background-color: #991b1b;
+            /* red-800 */
             transform: translateY(-2px);
         }
 
@@ -154,69 +172,89 @@
             background-color: #FF0000;
             clip-path: polygon(0 0, 100% 100%, 100% 50%, 0 50%);
         }
+
         .diagonal-divider-inverse {
             height: 50px;
             background-color: #FFFF00;
             clip-path: polygon(0 50%, 100% 0, 100% 100%, 0 100%);
         }
-
     </style>
 </head>
+
 <body class="antialiased">
 
-    <!-- Секция 1: Заголовок и Герой --><header class="h-screen flex items-center justify-center text-center bg-red-700 relative overflow-hidden">
-        
-        <!-- Геометрический задний план (Диагонали) --><div class="absolute inset-0 z-0 opacity-10">
+    <!-- Секция 1: Заголовок и Герой -->
+    <header class="h-screen flex items-center justify-center text-center bg-red-700 relative overflow-hidden">
+
+        <!-- Геометрический задний план (Диагонали) -->
+        <div class="absolute inset-0 z-0 opacity-10">
             <div class="absolute top-0 left-0 w-full h-full bg-black skew-y-12 origin-top-left -translate-y-1/2"></div>
-            <div class="absolute bottom-0 right-0 w-full h-full bg-yellow-400 -skew-y-12 origin-bottom-right translate-y-1/2"></div>
+            <div
+                class="absolute bottom-0 right-0 w-full h-full bg-yellow-400 -skew-y-12 origin-bottom-right translate-y-1/2">
+            </div>
         </div>
 
         <div class="relative z-10 p-6 max-w-4xl mx-auto">
-            <h1 class="text-7xl md:text-9xl lg:text-[140px] font-extrabold leading-none text-white tracking-tighter reveal-hidden">
+            <h1
+                class="text-7xl md:text-9xl lg:text-[140px] font-extrabold leading-none text-white tracking-tighter reveal-hidden">
                 СОВЕТСКИЙ<br>ANGULAR
             </h1>
-            <p class="text-3xl md:text-5xl lg:text-6xl font-normal text-yellow-400 mt-4 reveal-hidden" style="transition-delay: 0.2s;">
+            <p class="text-3xl md:text-5xl lg:text-6xl font-normal text-yellow-400 mt-4 reveal-hidden"
+                style="transition-delay: 0.2s;">
                 ЧАТ ПРОГРЕССА И ЕДИНСТВА
             </p>
             <div class="mt-10 reveal-hidden" style="transition-delay: 0.4s;">
-                <a href="https://t.me/soviet_angular" target="_blank" class="inline-block cta-button bg-black text-white text-2xl md:text-3xl font-bold py-4 px-12 uppercase rounded-none hover:bg-red-800">
+                <a href="https://t.me/soviet_angular" target="_blank"
+                    class="inline-block cta-button bg-black text-white text-2xl md:text-3xl font-bold py-4 px-12 uppercase rounded-none hover:bg-red-800">
                     ВСТУПИТЬ В АРТЕЛЬ
                 </a>
             </div>
         </div>
     </header>
-    
-    <!-- Диагональный разделитель --><div class="diagonal-divider"></div>
 
-    <!-- Секция 2: Манифест и Миссия (Использует новый градиентный фон) --><section class="py-20 construct-bg">
+    <!-- Диагональный разделитель -->
+    <div class="diagonal-divider"></div>
+
+    <!-- Секция 2: Манифест и Миссия (Использует новый градиентный фон) -->
+    <section class="py-20 construct-bg">
         <div class="container mx-auto px-6 max-w-5xl relative z-10">
             <div class="text-center reveal-hidden">
-                <!-- Заголовок: Желтый на Черном --><h2 class="text-5xl md:text-7xl font-extrabold text-yellow-400 mb-8 tracking-tighter">
+                <!-- Заголовок: Желтый на Черном -->
+                <h2 class="text-5xl md:text-7xl font-extrabold text-yellow-400 mb-8 tracking-tighter">
                     ДЕЛО ОБЩЕЕ:<br>НАШ МАНИФЕСТ
                 </h2>
             </div>
-            <!-- Основной текст: Белый на Сплошном Черном --><p class="text-2xl md:text-3xl leading-relaxed text-white text-center reveal-hidden bg-black p-4 mx-auto max-w-xl" style="transition-delay: 0.2s;">
-                МЫ — АРТЕЛЬ КОДЕРОВ, ОБЪЕДИНЕННЫХ НЕ ТОЛЬКО ФРЕЙМВОРКОМ ANGULAR, НО И ВЕЛИКИМ ДУХОМ ТОВАРИЩЕСТВА. ЗДЕСЬ ОБСУЖДАЕТСЯ ВСЕ: ОТ СЛОЖНЕЙШИХ ПРОБЛЕМ В РАЗРАБОТКЕ ДО АБСОЛЮТНЫХ ФИЛОСОФСКИХ ВОПРОСОВ.
+            <!-- Основной текст: Белый на Сплошном Черном -->
+            <p class="text-2xl md:text-3xl leading-relaxed text-white text-center reveal-hidden bg-black p-4 mx-auto max-w-xl"
+                style="transition-delay: 0.2s;">
+                МЫ — АРТЕЛЬ КОДЕРОВ, ОБЪЕДИНЕННЫХ НЕ ТОЛЬКО ФРЕЙМВОРКОМ ANGULAR, НО И ВЕЛИКИМ ДУХОМ ТОВАРИЩЕСТВА. ЗДЕСЬ
+                ОБСУЖДАЕТСЯ ВСЕ: ОТ СЛОЖНЕЙШИХ ПРОБЛЕМ В РАЗРАБОТКЕ ДО АБСОЛЮТНЫХ ФИЛОСОФСКИХ ВОПРОСОВ.
             </p>
-            <!-- Акцентный текст: Желтый на Черном --><p class="text-4xl md:text-5xl font-bold text-yellow-400 text-center mt-6 reveal-hidden" style="transition-delay: 0.4s;">
+            <!-- Акцентный текст: Желтый на Черном -->
+            <p class="text-4xl md:text-5xl font-bold text-yellow-400 text-center mt-6 reveal-hidden"
+                style="transition-delay: 0.4s;">
                 ГЛАВНОЕ — ПОДДЕРЖКА И ЕДИНСТВО!
             </p>
         </div>
     </section>
 
-    <!-- Диагональный разделитель --><div class="diagonal-divider-inverse"></div>
+    <!-- Диагональный разделитель -->
+    <div class="diagonal-divider-inverse"></div>
 
-    <!-- Секция 3: Основные Направления (Фичи) + АТРИБУТЫ СССР В ФОНЕ --><section class="py-20 bg-black soviet-attributes">
+    <!-- Секция 3: Основные Направления (Фичи) + АТРИБУТЫ СССР В ФОНЕ -->
+    <section class="py-20 bg-black soviet-attributes">
         <div class="container mx-auto px-6 max-w-6xl relative z-10">
             <div class="text-center mb-16 reveal-hidden">
-                <h2 class="text-5xl md:text-7xl font-extrabold text-white tracking-tighter border-b-8 border-red-600 inline-block pb-2 px-4">
+                <h2
+                    class="text-5xl md:text-7xl font-extrabold text-white tracking-tighter border-b-8 border-red-600 inline-block pb-2 px-4">
                     СТРОИМ БУДУЩЕЕ ВМЕСТЕ
                 </h2>
             </div>
 
             <div class="grid md:grid-cols-3 gap-8">
-                
-                <!-- Блок 1: Офтоп --><div class="bg-red-700 p-8 transform rotate-0 hover:rotate-2 transition duration-300 reveal-hidden">
+
+                <!-- Блок 1: Офтоп -->
+                <div class="bg-red-700 p-8 transform rotate-0 hover:rotate-2 transition duration-300 reveal-hidden">
                     <div class="text-6xl text-yellow-400 mb-4">★</div>
                     <h3 class="text-3xl font-extrabold mb-3 text-white">ОФТОП: СВЯЗУЮЩАЯ НИТЬ</h3>
                     <p class="text-lg text-white font-light">
@@ -224,7 +262,9 @@
                     </p>
                 </div>
 
-                <!-- Блок 2: Angular --><div class="bg-white text-black p-8 transform rotate-0 hover:-rotate-2 transition duration-300 reveal-hidden" style="transition-delay: 0.2s;">
+                <!-- Блок 2: Angular -->
+                <div class="bg-white text-black p-8 transform rotate-0 hover:-rotate-2 transition duration-300 reveal-hidden"
+                    style="transition-delay: 0.2s;">
                     <div class="text-6xl text-red-600 mb-4">⚙</div>
                     <h3 class="text-3xl font-extrabold mb-3">ANGULAR: ПЛАН ПЯТИЛЕТКИ</h3>
                     <p class="text-lg font-light">
@@ -232,7 +272,9 @@
                     </p>
                 </div>
 
-                <!-- Блок 3: Единство --><div class="bg-yellow-400 text-black p-8 transform rotate-0 hover:rotate-3 transition duration-300 reveal-hidden" style="transition-delay: 0.4s;">
+                <!-- Блок 3: Единство -->
+                <div class="bg-yellow-400 text-black p-8 transform rotate-0 hover:rotate-3 transition duration-300 reveal-hidden"
+                    style="transition-delay: 0.4s;">
                     <div class="text-6xl text-red-600 mb-4">☭</div>
                     <h3 class="text-3xl font-extrabold mb-3">ЕДИНСТВО: МОЩЬ КОЛЛЕКТИВА</h3>
                     <p class="text-lg font-light">
@@ -244,62 +286,72 @@
         </div>
     </section>
 
-    <!-- Секция 4: Финальный призыв (Использует новый градиентный фон) --><section class="py-24 construct-bg border-t-8 border-yellow-400">
+    <!-- Секция 4: Финальный призыв (Использует новый градиентный фон) -->
+    <section class="py-24 construct-bg border-t-8 border-yellow-400">
         <div class="text-center reveal-hidden relative z-10">
             <h2 class="text-5xl md:text-8xl font-extrabold text-yellow-400 mb-10 tracking-tighter">
                 НЕ ЖДИ ПРИКАЗА. ДЕЙСТВУЙ!
             </h2>
-            <a href="https://t.me/soviet_angular" target="_blank" class="inline-block cta-button bg-red-600 text-white text-3xl md:text-4xl font-bold py-5 px-16 uppercase rounded-none hover:bg-black reveal-hidden" style="transition-delay: 0.2s;">
+            <a href="https://t.me/soviet_angular" target="_blank"
+                class="inline-block cta-button bg-red-600 text-white text-3xl md:text-4xl font-bold py-5 px-16 uppercase rounded-none hover:bg-black reveal-hidden"
+                style="transition-delay: 0.2s;">
                 ВСТУПИТЬ В АРТЕЛЬ
             </a>
         </div>
     </section>
 
-    <!-- Футер --><footer class="bg-black py-8 border-t-4 border-red-600">
+    <!-- Футер -->
+    <footer class="bg-black py-8 border-t-4 border-red-600">
         <div class="container mx-auto px-6 text-center text-sm md:text-lg text-white opacity-75">
             <div class="flex flex-col md:flex-row justify-center items-center space-y-3 md:space-y-0 md:space-x-8">
-                <!-- Кнопка "ОРИГИНАЛЬНЫЙ ПРИКАЗ" --><button 
-                    id="show-prompt-btn"
-                    class="footer-button bg-red-700 text-white font-bold py-2 px-4 uppercase text-sm"
-                >
+                <!-- Кнопка "ОРИГИНАЛЬНЫЙ ПРИКАЗ" --><button id="show-prompt-btn"
+                    class="footer-button bg-red-700 text-white font-bold py-2 px-4 uppercase text-sm">
                     ОРИГИНАЛЬНЫЙ ПРИКАЗ
                 </button>
 
-                <!-- Ссылка на GitHub --><p class="font-light reveal-hidden">
-                    ИСХОДНИКИ: 
-                    <a href="https://github.com/soviet-angular/soviet-angular.ru" target="_blank" class="text-yellow-400 hover:text-red-600 underline">
+                <!-- Ссылка на GitHub -->
+                <p class="font-light reveal-hidden">
+                    ИСХОДНИКИ:
+                    <a href="https://github.com/soviet-angular/soviet-angular.ru" target="_blank"
+                        class="text-yellow-400 hover:text-red-600 underline">
                         GITHUB
                     </a>
                 </p>
 
-                <!-- Ссылка на Чат --><p class="font-light reveal-hidden">
-                    АДРЕС ЧАТА: 
-                    <a href="https://t.me/soviet_angular" target="_blank" class="text-yellow-400 hover:text-red-600 underline">
+                <!-- Ссылка на Чат -->
+                <p class="font-light reveal-hidden">
+                    АДРЕС ЧАТА:
+                    <a href="https://t.me/soviet_angular" target="_blank"
+                        class="text-yellow-400 hover:text-red-600 underline">
                         T.ME/SOVIET_ANGULAR
                     </a>
                 </p>
             </div>
-            
-            <p class="font-light mt-4 reveal-hidden" style="transition-delay: 0.1s;">ВСЕ ВОПРОСЫ В ФОКУСЕ, КОМРАДЫ! 2025 ГОД. ПЛАН ВЫПОЛНЕН.</p>
+
+            <p class="font-light mt-4 reveal-hidden" style="transition-delay: 0.1s;">ВСЕ ВОПРОСЫ В ФОКУСЕ, КОМРАДЫ! 2025
+                ГОД. ПЛАН ВЫПОЛНЕН.</p>
         </div>
     </footer>
 
-    <!-- Модальное окно для отображения ТЗ (Скрыто по умолчанию) --><div id="prompt-modal" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex justify-center p-4 py-10 overflow-y-auto transition-opacity duration-300">
-        <!-- ИЗМЕНЕНИЕ: Убран rotate-1 по умолчанию, добавлен md:rotate-1 для десктопа, max-h-full для мобильных --><div class="bg-white p-8 max-w-3xl w-full relative border-8 border-red-600 shadow-2xl transform md:rotate-1 transition-transform duration-300 max-h-full overflow-y-auto">
+    <!-- Модальное окно для отображения ТЗ (Скрыто по умолчанию) -->
+    <div id="prompt-modal"
+        class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex justify-center p-4 py-10 overflow-y-auto transition-opacity duration-300">
+        <!-- ИЗМЕНЕНИЕ: Убран rotate-1 по умолчанию, добавлен md:rotate-1 для десктопа, max-h-full для мобильных -->
+        <div
+            class="bg-white p-8 max-w-3xl w-full relative border-8 border-red-600 shadow-2xl transform md:rotate-1 transition-transform duration-300 max-h-full overflow-y-auto">
             <h3 class="text-4xl font-extrabold text-black mb-4 border-b-4 border-yellow-400 pb-2">
                 ПЕРВИЧНЫЙ ДИРЕКТИВ
             </h3>
-            <pre class="whitespace-pre-wrap text-lg text-black font-mono leading-snug bg-gray-100 p-4 border-l-4 border-red-600">
+            <pre
+                class="whitespace-pre-wrap text-lg text-black font-mono leading-snug bg-gray-100 p-4 border-l-4 border-red-600">
 Сделай веб-сайт в стиле "Soviet Constructivist Style", максимально креативный, выжми из идеи все, что можно. Добавь плавные скролл-анимации, яркие цвета и tailwind-стили. Сделай адаптивную вёрстку.
 
 Тема сайта: Есть советский чат про фреймворк ангулар, там в основном офтоп но иногда говорят и толковые вещи, людям нравится там сидеть так как там можно обсудить абсолютные вопросы и люди поддержут, это как большая семья
 
 Адрес чата а телеграм: https://t.me/soviet_angular
             </pre>
-            <button 
-                id="close-prompt-btn"
-                class="absolute top-2 right-2 bg-red-600 text-white text-xl font-bold w-10 h-10 leading-none hover:bg-red-800 transition"
-            >
+            <button id="close-prompt-btn"
+                class="absolute top-2 right-2 bg-red-600 text-white text-xl font-bold w-10 h-10 leading-none hover:bg-red-800 transition">
                 &times;
             </button>
         </div>
@@ -313,7 +365,7 @@
         const modal = document.getElementById('prompt-modal');
         const showBtn = document.getElementById('show-prompt-btn');
         const closeBtn = document.getElementById('close-prompt-btn');
-        
+
         // --- Логика модального окна ---
         function showModal() {
             modal.classList.remove('hidden');
@@ -327,7 +379,7 @@
 
         showBtn.addEventListener('click', showModal);
         closeBtn.addEventListener('click', hideModal);
-        
+
         // Закрытие по клику вне модального окна
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
@@ -364,7 +416,7 @@
 
         // Дополнительный вызов для элементов в шапке, которые могут быть сразу видны
         document.addEventListener('DOMContentLoaded', () => {
-             document.querySelectorAll('.reveal-hidden').forEach(el => {
+            document.querySelectorAll('.reveal-hidden').forEach(el => {
                 // Мгновенно показать элементы в верхней части экрана, если они уже видны
                 if (el.getBoundingClientRect().top < window.innerHeight) {
                     el.classList.add('reveal-visible');
@@ -374,4 +426,5 @@
     </script>
 
 </body>
+
 </html>
