@@ -633,7 +633,7 @@
             // 4. Воспроизвести звук (только если не заглушено)
             if (!isMuted && mkAudio) {
                 mkAudio.currentTime = 0;
-                mkAudio.volume = 0.3;
+                mkAudio.volume = 0.1;
                 mkAudio.play().catch(e => console.error("Ошибка воспроизведения аудио (могло быть заблокировано браузером до первого взаимодействия):", e));
             }
 
