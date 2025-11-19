@@ -158,6 +158,7 @@
             letter-spacing: 50px;
             transform: rotate(15deg) translateX(25%);
             pointer-events: none;
+            /* Чтобы не мешать кликам */
         }
 
         /* Классы для анимации при скролле */
@@ -219,10 +220,12 @@
 
         /* --- Стили для Кнопки Отключения Звука (Советский Запрет) --- */
         #mute-btn {
+            /* ОБНОВЛЕНО: Используем #FACC15 (yellow-400) */
             width: 40px;
             height: 40px;
-            background-color: #FFFF00;
+            background-color: #FACC15;
             border: 8px solid #DC2626;
+            /* red-600 */
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -234,7 +237,7 @@
             /* Скрыто по умолчанию */
 
             color: #DC2626;
-            /* Красный динамик (Unmuted) */
+            /* Красный динамик (Unmuted - red-600) */
         }
 
         /* Показываем кнопку, когда активен Народный Герой */
@@ -436,38 +439,20 @@
         </div>
     </div>
 
-    <!-- Модальное окно 2: Личное дело -->
+    <!-- Модальное окно 2: Личное дело (Обновлен заголовок для номера) -->
     <div id="hero-modal"
         class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex justify-center p-4 py-10 overflow-y-auto transition-opacity duration-300">
         <div
             class="bg-white p-8 max-w-3xl w-full relative border-8 border-red-600 shadow-2xl transform md:rotate-1 transition-transform duration-300 max-h-full overflow-y-auto">
-            <h3 class="text-4xl font-extrabold text-black mb-4 border-b-4 border-yellow-400 pb-2 text-center">
-                ЛИЧНОЕ ДЕЛО №1
+            <!-- Обновленный заголовок с ID для номера дела -->
+            <h3 id="hero-modal-title"
+                class="text-4xl font-extrabold text-black mb-4 border-b-4 border-yellow-400 pb-2 text-center">
+                ЛИЧНОЕ ДЕЛО №<span id="hero-case-number">0000</span>
+                <!-- УДАЛЕНО: class="text-yellow-400" для синхронизации цвета -->
             </h3>
-            <div class="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-8 mt-6">
-                <!-- Фотография Героя в рамке -->
-                <img src="./assets/people/kaufman-endy/photo.png" alt="Ильшат - gpt гуру"
-                    class="w-40 h-40 object-cover border-4 border-red-600">
-                <!-- Описание (Обновленная анкета) -->
-                <div class="text-left text-black font-mono leading-relaxed flex-grow text-sm md:text-base">
-                    <p class="mb-1"><strong class="text-red-600">Фамилия, имя:</strong> Хамитов Ильшат</p>
-                    <p class="mb-1"><strong class="text-red-600">Условное имя (кличка):</strong> «ГПТ Гуру»</p>
-                    <p class="mb-1"><strong class="text-red-600">Национальность:</strong> татарин</p>
-                    <p class="mb-1"><strong class="text-red-600">Род занятий:</strong> инженер-программист, руководитель
-                        производственного звена.</p>
-                    <p class="mb-1"><strong class="text-red-600">Квалификация:</strong> специалист широкого профиля,
-                        осуществляющий работы по созданию и сопровождению вычислительных программ.</p>
-                    <p class="mb-1"><strong class="text-red-600">Трудовой стаж по специальности:</strong> 18 лет.</p>
-                    <p class="mb-1"><strong class="text-red-600">Основной язык программирования:</strong> язык машинной
-                        логики - "ТАЙПСКРИПТ", применяемый для автоматизации вычислительных процессов.</p>
-                    <!-- ИЗМЕНЕНИЕ ЗДЕСЬ: Телеграфный адрес как отдельный, очевидный пункт -->
-                    <p class="mt-4"><strong class="text-red-600">Телеграфный адрес (Средство связи):</strong>
-                        <a href="https://t.me/KaufmanEndy" target="_blank"
-                            class="text-blue-600 underline hover:text-red-600">
-                            https://t.me/KaufmanEndy
-                        </a>
-                    </p>
-                </div>
+            <!-- Контейнер для динамически генерируемого профиля Героя -->
+            <div id="hero-profile-container">
+                <!-- Содержание будет генерироваться JavaScript'ом на основе выбранного Героя -->
             </div>
             <button id="close-hero-btn"
                 class="absolute top-2 right-2 bg-red-600 text-white text-xl font-bold w-10 h-10 leading-none hover:bg-red-800 transition">
@@ -496,14 +481,13 @@
                 </svg>
             </button>
 
-            <!-- Изображение, размер уменьшен -->
-            <!-- Добавлен pointer-events-auto, чтобы оно было кликабельно, и курсор:pointer для UX -->
-            <img id="mk-image" src="./assets/people/kaufman-endy/photo.png" alt="Народный Герой"
+            <!-- Изображение, пути к которому устанавливаются динамически -->
+            <img id="mk-image" src="" alt="Народный Герой"
                 class="w-32 h-32 md:w-40 md:h-40 object-cover border-8 border-red-600 shadow-2xl pointer-events-auto cursor-pointer">
         </div>
     </div>
-    <!-- Аудио элемент для боевого клича -->
-    <audio id="mk-audio" src="./assets/people/kaufman-endy/sound.mp3" preload="auto"></audio>
+    <!-- Аудио элемент для боевого клича, путь к которому устанавливается динамически -->
+    <audio id="mk-audio" src="" preload="auto"></audio>
 
     <script>
         // --- Глобальное состояние и Константы ---
@@ -513,6 +497,68 @@
         let isMuted = false;
         let heroTimerId = null;
         let activeModalCount = 0; // Счетчик открытых модальных окон
+        let currentHero = null; // Текущий выбранный герой
+        let previousHero = null; // Предыдущий выбранный герой (для избежания повторов)
+
+        // Фразы для отсутствия данных (для режима строгой отчетности)
+        const ABSENCE_PHRASES = [
+            'сведения отсутствуют',
+            'данных не имеется',
+            'информации не представлено',
+            'справка не поступила',
+            'не установлено'
+        ];
+
+        // Цвета для плейсхолдеров:
+        // red-600 (#DC2626) и yellow-400 (#FACC15)
+        const PLACEHOLDER_RED = 'DC2626';
+        const PLACEHOLDER_YELLOW = 'FACC15';
+
+        // --- МАССИВ НАРОДНЫХ ГЕРОЕВ (РОТАЦИЯ КАДРОВ) ---
+        const HEROES = [
+            {
+                caseNumber: 1001, // Фиксированный номер
+                name: 'Хамитов Ильшат',
+                nickname: '«ГПТ Гуру»',
+                nationality: 'татарин',
+                occupation: 'инженер-программист, руководитель производственного звена.',
+                qualification: 'специалист широкого профиля, осуществляющий работы по созданию и сопровождению вычислительных программ.',
+                experience: '18 лет.',
+                language: 'язык машинной логики - "ТАЙПСКРИПТ", применяемый для автоматизации вычислительных процессов.',
+                telegram: 'https://tme/KaufmanEndy',
+                photoUrl: './assets/people/kaufman-endy/photo.png',
+                soundUrl: './assets/people/kaufman-endy/sound.mp3'
+            },
+            {
+                caseNumber: 1002, // Фиксированный номер
+                name: 'Волков Алексей',
+                nickname: '«Архитектор Вью»',
+                nationality: null,
+                occupation: 'Старший инженер-разработчик, наставник молодежи.',
+                qualification: 'Специалист по распределенным системам, проектирование интерфейсов.',
+                experience: '12 лет.',
+                language: 'язык машинной логики - "ДЖАВАСКРИПТ", основной инструмент создания динамических веб-приложений.',
+                telegram: null,
+                // ОБНОВЛЕНО: Используем единый красный и желтый цвета
+                photoUrl: `https://placehold.co/160x160/${PLACEHOLDER_RED}/${PLACEHOLDER_YELLOW}?text=А.В.`,
+                soundUrl: './assets/people/kaufman-endy/sound.mp3' // Используем тот же звук
+            },
+            {
+                caseNumber: 1003, // Фиксированный номер
+                name: 'Иванова Светлана',
+                nickname: '«Кибер-Активист»',
+                nationality: null,
+                occupation: 'Аналитик данных, политрук по информационной безопасности.',
+                qualification: 'Мастер обработки больших объемов информации, алгоритмист.',
+                experience: '', // Пустая строка для теста
+                language: 'язык машинной логики - "ПИТОН", главный двигатель автоматизации и статистики.',
+                telegram: null,
+                // ОБНОВЛЕНО: Используем единый красный и желтый цвета (поменяны местами для контраста)
+                photoUrl: `https://placehold.co/160x160/${PLACEHOLDER_YELLOW}/${PLACEHOLDER_RED}?text=С.И.`,
+                soundUrl: './assets/people/kaufman-endy/sound.mp3' // Используем тот же звук
+            }
+        ];
+
 
         // --- DOM Элементы ---
         const revealElements = document.querySelectorAll('.reveal-hidden');
@@ -525,6 +571,8 @@
         // Модальное окно "Личное Дело"
         const heroModal = document.getElementById('hero-modal');
         const closeHeroBtn = document.getElementById('close-hero-btn');
+        const heroProfileContainer = document.getElementById('hero-profile-container'); // Контейнер для профиля
+        const heroCaseNumber = document.getElementById('hero-case-number'); // Элемент для номера дела
 
         // Народный Герой (Mortal Kombat Pop-up)
         const mkPopup = document.getElementById('mk-popup');
@@ -534,6 +582,31 @@
         const mkImage = document.getElementById('mk-image');
 
         // --- Вспомогательные функции Народного Героя ---
+
+        /**
+         * Генерирует случайное целое число.
+         * @param {number} min - Минимальное значение.
+         * @param {number} max - Максимальное значение.
+         */
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        /**
+         * Возвращает значение поля или случайную фразу об отсутствии информации.
+         * Если значение null, undefined или пустая строка, выбирается случайная фраза.
+         * @param {string | null | undefined} value 
+         * @returns {string} HTML-строка со значением или отформатированным плейсхолдером.
+         */
+        function getValueOrPlaceholder(value) {
+            // Проверка на отсутствие данных (null, undefined, пустая строка)
+            if (value === null || value === undefined || (typeof value === 'string' && value.trim() === '')) {
+                const randomIndex = getRandomInt(0, ABSENCE_PHRASES.length - 1);
+                // Используем только жирный шрифт (font-bold)
+                return `<span class="font-bold">${ABSENCE_PHRASES[randomIndex]}</span>`;
+            }
+            return value;
+        }
 
         /**
          * Управляет непосредственным скрытием Hero UI.
@@ -557,10 +630,101 @@
         }
 
         /**
-         * Генерирует случайное целое число.
+         * Выбирает случайного героя из списка, гарантируя, что он не будет
+         * тем же, что был выбран в прошлый раз.
          */
-        function getRandomInt(min, max) {
-            return Math.floor(Math.random() * (max - min + 1)) + min;
+        function selectRandomHero() {
+            let randomIndex;
+            let newHero;
+            let attempts = 0;
+            const maxAttempts = 10;
+
+            do {
+                randomIndex = getRandomInt(0, HEROES.length - 1);
+                newHero = HEROES[randomIndex];
+                attempts++;
+            } while (previousHero && newHero === previousHero && attempts < maxAttempts);
+
+            previousHero = currentHero;
+            currentHero = newHero;
+
+            console.log(`Текущий Герой: ${currentHero.name} (${currentHero.nickname})`);
+        }
+
+        /**
+         * Обновляет DOM элементы (изображение, аудио, модальное окно) данными текущего героя.
+         */
+        function updateHeroUI() {
+            if (!currentHero) return;
+
+            // 1. Используем ПОСТОЯННЫЙ номер личного дела из объекта Героя
+            heroCaseNumber.textContent = currentHero.caseNumber;
+
+            // Обновляем всплывающее изображение
+            mkImage.src = currentHero.photoUrl;
+            mkImage.alt = currentHero.nickname;
+
+            // Обновляем аудио
+            mkAudio.src = currentHero.soundUrl;
+
+            // Подготовка HTML-кода для телеграфного адреса (специальная обработка для ссылки)
+            let telegramContent;
+            if (currentHero.telegram) {
+                telegramContent = `
+                    <a href="${currentHero.telegram}" target="_blank"
+                        class="text-blue-600 underline hover:text-red-600">
+                        ${currentHero.telegram}
+                    </a>
+                `;
+            } else {
+                // Если данных нет, используем рандомный плейсхолдер
+                telegramContent = getValueOrPlaceholder(null);
+            }
+
+            // Динамически заполняем модальное окно "Личное Дело"
+            const profileHTML = `
+                <div class="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-8 mt-6">
+                    <!-- Фотография Героя -->
+                    <img src="${currentHero.photoUrl}" alt="${currentHero.nickname}"
+                        class="w-40 h-40 object-cover shadow-md border border-gray-300">
+                    <!-- Описание (Обновленная анкета) -->
+                    <div class="text-left text-black font-mono leading-relaxed flex-grow text-sm md:text-base">
+                        <p class="mb-1"><strong class="text-red-600">Фамилия, имя:</strong> ${getValueOrPlaceholder(currentHero.name)}</p>
+                        <p class="mb-1"><strong class="text-red-600">Условное имя (кличка):</strong> ${getValueOrPlaceholder(currentHero.nickname)}</p>
+                        <p class="mb-1"><strong class="text-red-600">Национальность:</strong> ${getValueOrPlaceholder(currentHero.nationality)}</p>
+                        <p class="mb-1"><strong class="text-red-600">Род занятий:</strong> ${getValueOrPlaceholder(currentHero.occupation)}</p>
+                        <p class="mb-1"><strong class="text-red-600">Квалификация:</strong> ${getValueOrPlaceholder(currentHero.qualification)}</p>
+                        <p class="mb-1"><strong class="text-red-600">Трудовой стаж по специальности:</strong> ${getValueOrPlaceholder(currentHero.experience)}</p>
+                        <p class="mb-1"><strong class="text-red-600">Основной язык программирования:</strong> ${getValueOrPlaceholder(currentHero.language)}</p>
+                        <!-- Телеграфный адрес как отдельный, очевидный пункт -->
+                        <p class="mt-4"><strong class="text-red-600">Телеграфный адрес (Средство связи):</strong>
+                            ${telegramContent}
+                        </p>
+                    </div>
+                </div>
+            `;
+            heroProfileContainer.innerHTML = profileHTML;
+        }
+
+        /**
+         * Управляет непосредственным скрытием Hero UI.
+         */
+        function hideHeroUI() {
+            mkPopup.classList.remove('mk-popup-visible');
+            // Сбросить поворот и масштаб контейнера
+            mkImageContainer.style.transform = 'scale(1) rotate(0deg)';
+            // Убедиться, что он находится ниже экрана
+            mkPopup.style.transform = 'translateX(-50%) translateY(100%)';
+        }
+
+        /**
+         * Очищает текущий таймер для следующего появления Героя.
+         */
+        function cancelHeroSchedule() {
+            if (heroTimerId) {
+                clearTimeout(heroTimerId);
+                heroTimerId = null;
+            }
         }
 
         /**
@@ -596,6 +760,12 @@
                 scheduleNextPop(); // Сразу планируем новое появление
                 return;
             }
+
+            // Выбираем нового Героя, гарантируя, что он не повторит предыдущего
+            selectRandomHero();
+
+            // Обновляем UI, включая изображение и аудио, на основе нового currentHero
+            updateHeroUI();
 
             // 1. Рандомизация позиции
             const randomX = getRandomInt(10, 90);
@@ -652,6 +822,17 @@
             if (mkPopup.classList.contains('mk-popup-visible')) {
                 hideHeroUI();
             }
+
+            // Дополнительно: при открытии Личного Дела нужно обновить его содержимое.
+            if (modalElement === heroModal) {
+                // Если currentHero не установлен (например, сразу после загрузки страницы), выбираем его.
+                if (!currentHero) {
+                    selectRandomHero();
+                }
+
+                // Используем текущего Героя для обновления модального окна.
+                updateHeroUI();
+            }
         }
 
         /**
@@ -703,6 +884,11 @@
          * Инициализация состояния звука и слушателей.
          */
         function initializeHero() {
+            // 1. Выбрать первого случайного героя (previousHero будет null, поэтому повторов не будет)
+            selectRandomHero(); // Инициализирует currentHero
+            updateHeroUI(); // Обновляет mkImage и модалку на основе первого выбранного Героя
+
+            // 2. Установить состояние mute
             const savedMuteState = localStorage.getItem('mkHeroMuted');
             isMuted = savedMuteState === 'true';
 
