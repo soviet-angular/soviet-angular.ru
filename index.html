@@ -444,13 +444,12 @@
         class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex justify-center p-4 py-10 overflow-y-auto transition-opacity duration-300">
         <div
             class="bg-white p-8 max-w-3xl w-full relative border-8 border-red-600 shadow-2xl transform md:rotate-1 transition-transform duration-300 max-h-full overflow-y-auto">
-            <!-- Обновленный заголовок с ID для номера дела -->
-            <h3 id="hero-modal-title"
-                class="text-4xl font-extrabold text-black mb-4 border-b-4 border-yellow-400 pb-2 text-center">
+            <!-- Заголовок выровнен влево, как в Приказе -->
+            <h3 id="hero-modal-title" class="text-4xl font-extrabold text-black mb-4 border-b-4 border-yellow-400 pb-2">
                 ЛИЧНОЕ ДЕЛО №<span id="hero-case-number">0000</span>
-                <!-- УДАЛЕНО: class="text-yellow-400" для синхронизации цвета -->
             </h3>
             <!-- Контейнер для динамически генерируемого профиля Героя -->
+            <!-- Содержимое будет стилизовано внутри JS -->
             <div id="hero-profile-container">
                 <!-- Содержание будет генерироваться JavaScript'ом на основе выбранного Героя -->
             </div>
@@ -609,6 +608,67 @@
         }
 
         /**
+         * Обновляет DOM элементы (изображение, аудио, модальное окно) данными текущего героя.
+         */
+        function updateHeroUI() {
+            if (!currentHero) return;
+
+            // 1. Используем ПОСТОЯННЫЙ номер личного дела из объекта Героя
+            heroCaseNumber.textContent = currentHero.caseNumber;
+
+            // Обновляем всплывающее изображение
+            mkImage.src = currentHero.photoUrl;
+            mkImage.alt = currentHero.nickname;
+
+            // Обновляем аудио
+            mkAudio.src = currentHero.soundUrl;
+
+            // Подготовка HTML-кода для телеграфного адреса (специальная обработка для ссылки)
+            let telegramContent;
+            if (currentHero.telegram) {
+                telegramContent = `
+                    <a href="${currentHero.telegram}" target="_blank"
+                        class="text-blue-600 underline hover:text-red-600">
+                        ${currentHero.telegram}
+                    </a>
+                `;
+            } else {
+                // Если данных нет, используем рандомный плейсхолдер
+                telegramContent = getValueOrPlaceholder(null);
+            }
+
+            // Динамически заполняем модальное окно "Личное Дело"
+            // ОБНОВЛЕНО: Весь профиль теперь находится внутри блока со стилем цитаты
+            const profileHTML = `
+                <!-- Блок со стилем цитаты: bg-gray-100, border-l-4 border-red-600, font-mono -->
+                <div class="bg-gray-100 p-4 border-l-4 border-red-600 leading-snug text-sm md:text-base font-mono mt-6">
+                    <!-- Flex-контейнер для фотографии и текста -->
+                    <div class="flex flex-col md:flex-row gap-6 items-start">
+                        <!-- Фотография Героя -->
+                        <!-- ОБНОВЛЕНО: Убраны shadow-md и border-4. Добавлены w-full h-auto для моб. устройств и md:w-28 md:h-28 для десктопа -->
+                        <img src="${currentHero.photoUrl}" alt="${currentHero.nickname}"
+                            class="w-full h-auto object-cover flex-shrink-0 md:w-28 md:h-28">
+                        <!-- Описание (Обновленная анкета) -->
+                        <div class="text-left text-black flex-grow">
+                            <p class="mb-1"><strong class="text-red-600">Фамилия, имя:</strong> ${getValueOrPlaceholder(currentHero.name)}</p>
+                            <p class="mb-1"><strong class="text-red-600">Условное имя (кличка):</strong> ${getValueOrPlaceholder(currentHero.nickname)}</p>
+                            <p class="mb-1"><strong class="text-red-600">Национальность:</strong> ${getValueOrPlaceholder(currentHero.nationality)}</p>
+                            <p class="mb-1"><strong class="text-red-600">Род занятий:</strong> ${getValueOrPlaceholder(currentHero.occupation)}</p>
+                            <p class="mb-1"><strong class="text-red-600">Квалификация:</strong> ${getValueOrPlaceholder(currentHero.qualification)}</p>
+                            <p class="mb-1"><strong class="text-red-600">Трудовой стаж по специальности:</strong> ${getValueOrPlaceholder(currentHero.experience)}</p>
+                            <p class="mb-1"><strong class="text-red-600">Основной язык программирования:</strong> ${getValueOrPlaceholder(currentHero.language)}</p>
+                            <!-- Телеграфный адрес как отдельный, очевидный пункт -->
+                            <p class="mt-4"><strong class="text-red-600">Телеграфный адрес (Средство связи):</strong>
+                                ${telegramContent}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            heroProfileContainer.innerHTML = profileHTML;
+        }
+
+        /**
          * Управляет непосредственным скрытием Hero UI.
          */
         function hideHeroUI() {
@@ -649,82 +709,6 @@
             currentHero = newHero;
 
             console.log(`Текущий Герой: ${currentHero.name} (${currentHero.nickname})`);
-        }
-
-        /**
-         * Обновляет DOM элементы (изображение, аудио, модальное окно) данными текущего героя.
-         */
-        function updateHeroUI() {
-            if (!currentHero) return;
-
-            // 1. Используем ПОСТОЯННЫЙ номер личного дела из объекта Героя
-            heroCaseNumber.textContent = currentHero.caseNumber;
-
-            // Обновляем всплывающее изображение
-            mkImage.src = currentHero.photoUrl;
-            mkImage.alt = currentHero.nickname;
-
-            // Обновляем аудио
-            mkAudio.src = currentHero.soundUrl;
-
-            // Подготовка HTML-кода для телеграфного адреса (специальная обработка для ссылки)
-            let telegramContent;
-            if (currentHero.telegram) {
-                telegramContent = `
-                    <a href="${currentHero.telegram}" target="_blank"
-                        class="text-blue-600 underline hover:text-red-600">
-                        ${currentHero.telegram}
-                    </a>
-                `;
-            } else {
-                // Если данных нет, используем рандомный плейсхолдер
-                telegramContent = getValueOrPlaceholder(null);
-            }
-
-            // Динамически заполняем модальное окно "Личное Дело"
-            const profileHTML = `
-                <div class="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-8 mt-6">
-                    <!-- Фотография Героя -->
-                    <img src="${currentHero.photoUrl}" alt="${currentHero.nickname}"
-                        class="w-40 h-40 object-cover shadow-md border border-gray-300">
-                    <!-- Описание (Обновленная анкета) -->
-                    <div class="text-left text-black font-mono leading-relaxed flex-grow text-sm md:text-base">
-                        <p class="mb-1"><strong class="text-red-600">Фамилия, имя:</strong> ${getValueOrPlaceholder(currentHero.name)}</p>
-                        <p class="mb-1"><strong class="text-red-600">Условное имя (кличка):</strong> ${getValueOrPlaceholder(currentHero.nickname)}</p>
-                        <p class="mb-1"><strong class="text-red-600">Национальность:</strong> ${getValueOrPlaceholder(currentHero.nationality)}</p>
-                        <p class="mb-1"><strong class="text-red-600">Род занятий:</strong> ${getValueOrPlaceholder(currentHero.occupation)}</p>
-                        <p class="mb-1"><strong class="text-red-600">Квалификация:</strong> ${getValueOrPlaceholder(currentHero.qualification)}</p>
-                        <p class="mb-1"><strong class="text-red-600">Трудовой стаж по специальности:</strong> ${getValueOrPlaceholder(currentHero.experience)}</p>
-                        <p class="mb-1"><strong class="text-red-600">Основной язык программирования:</strong> ${getValueOrPlaceholder(currentHero.language)}</p>
-                        <!-- Телеграфный адрес как отдельный, очевидный пункт -->
-                        <p class="mt-4"><strong class="text-red-600">Телеграфный адрес (Средство связи):</strong>
-                            ${telegramContent}
-                        </p>
-                    </div>
-                </div>
-            `;
-            heroProfileContainer.innerHTML = profileHTML;
-        }
-
-        /**
-         * Управляет непосредственным скрытием Hero UI.
-         */
-        function hideHeroUI() {
-            mkPopup.classList.remove('mk-popup-visible');
-            // Сбросить поворот и масштаб контейнера
-            mkImageContainer.style.transform = 'scale(1) rotate(0deg)';
-            // Убедиться, что он находится ниже экрана
-            mkPopup.style.transform = 'translateX(-50%) translateY(100%)';
-        }
-
-        /**
-         * Очищает текущий таймер для следующего появления Героя.
-         */
-        function cancelHeroSchedule() {
-            if (heroTimerId) {
-                clearTimeout(heroTimerId);
-                heroTimerId = null;
-            }
         }
 
         /**
