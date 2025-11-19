@@ -217,42 +217,27 @@
             /* Агрессивный "bounce" */
         }
 
-        /* Стиль для самого изображения (внутри контейнера) */
-        .mk-popup-visible #mk-image-container {
-            /* УДАЛЕНО: box-shadow (освещение) */
-            /* УДАЛЕНО: border-radius (прямые углы) */
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.27);
-        }
-
         /* --- Стили для Кнопки Отключения Звука (Советский Запрет) --- */
-
         #mute-btn {
             width: 40px;
             height: 40px;
             background-color: #FFFF00;
-            /* Желтый фон (постоянно по требованию) */
-            /* ИЗМЕНЕНИЕ: Увеличена ширина рамки до 8px для соответствия Герою */
             border: 8px solid #DC2626;
-            /* Красная рамка, как у рамки Героя (8px, цвет red-600) */
             border-radius: 50%;
-            /* Круглая форма */
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            /* УДАЛЕНО: box-shadow (тень) */
-            /* ИЗМЕНЕНИЕ: Добавлен transition для opacity 0.3s */
             transition: all 0.2s, opacity 0.3s;
 
             opacity: 0;
-            /* НОВОЕ: Скрыто по умолчанию */
+            /* Скрыто по умолчанию */
 
-            /* Устанавливаем свойство 'color', которое SVG path с fill="currentColor" будет наследовать */
             color: #DC2626;
             /* Красный динамик (Unmuted) */
         }
 
-        /* НОВОЕ: Показываем кнопку, когда активен Народный Герой */
+        /* Показываем кнопку, когда активен Народный Герой */
         #mk-popup.mk-popup-visible #mute-btn {
             opacity: 1;
         }
@@ -263,18 +248,15 @@
 
         /* Иконка (Speaker Icon SVG) */
         #mute-icon-svg {
-            /* Цвет теперь управляется свойством 'color' на кнопке */
             position: relative;
             width: 24px;
             height: 24px;
             transition: color 0.2s;
-            /* Анимируем свойство 'color' */
         }
 
         /* Muted State: Меняем цвет иконки на черный */
         #mute-btn.is-muted {
             color: #000000;
-            /* Черный динамик (Muted) */
         }
     </style>
 </head>
@@ -431,10 +413,9 @@
         </div>
     </footer>
 
-    <!-- Модальное окно для отображения ТЗ (Скрыто по умолчанию) -->
+    <!-- Модальное окно 1: Оригинальный Приказ (ТЗ) -->
     <div id="prompt-modal"
         class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex justify-center p-4 py-10 overflow-y-auto transition-opacity duration-300">
-        <!-- Контейнер модального окна: max-h-full для вмещения контента на мобильных -->
         <div
             class="bg-white p-8 max-w-3xl w-full relative border-8 border-red-600 shadow-2xl transform md:rotate-1 transition-transform duration-300 max-h-full overflow-y-auto">
             <h3 class="text-4xl font-extrabold text-black mb-4 border-b-4 border-yellow-400 pb-2">
@@ -454,6 +435,47 @@
             </button>
         </div>
     </div>
+
+    <!-- Модальное окно 2: Личное дело -->
+    <div id="hero-modal"
+        class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex justify-center p-4 py-10 overflow-y-auto transition-opacity duration-300">
+        <div
+            class="bg-white p-8 max-w-3xl w-full relative border-8 border-red-600 shadow-2xl transform md:rotate-1 transition-transform duration-300 max-h-full overflow-y-auto">
+            <h3 class="text-4xl font-extrabold text-black mb-4 border-b-4 border-yellow-400 pb-2 text-center">
+                ЛИЧНОЕ ДЕЛО №1
+            </h3>
+            <div class="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-8 mt-6">
+                <!-- Фотография Героя в рамке -->
+                <img src="./assets/people/kaufman-endy/photo.png" alt="Ильшат - gpt гуру"
+                    class="w-40 h-40 object-cover border-4 border-red-600">
+                <!-- Описание (Обновленная анкета) -->
+                <div class="text-left text-black font-mono leading-relaxed flex-grow text-sm md:text-base">
+                    <p class="mb-1"><strong class="text-red-600">Фамилия, имя:</strong> Хамитов Ильшат</p>
+                    <p class="mb-1"><strong class="text-red-600">Условное имя (кличка):</strong> «ГПТ Гуру»</p>
+                    <p class="mb-1"><strong class="text-red-600">Национальность:</strong> татарин</p>
+                    <p class="mb-1"><strong class="text-red-600">Род занятий:</strong> инженер-программист, руководитель
+                        производственного звена.</p>
+                    <p class="mb-1"><strong class="text-red-600">Квалификация:</strong> специалист широкого профиля,
+                        осуществляющий работы по созданию и сопровождению вычислительных программ.</p>
+                    <p class="mb-1"><strong class="text-red-600">Трудовой стаж по специальности:</strong> 18 лет.</p>
+                    <p class="mb-1"><strong class="text-red-600">Основной язык программирования:</strong> язык машинной
+                        логики - "ТАЙПСКРИПТ", применяемый для автоматизации вычислительных процессов.</p>
+                    <!-- ИЗМЕНЕНИЕ ЗДЕСЬ: Телеграфный адрес как отдельный, очевидный пункт -->
+                    <p class="mt-4"><strong class="text-red-600">Телеграфный адрес (Средство связи):</strong>
+                        <a href="https://t.me/KaufmanEndy" target="_blank"
+                            class="text-blue-600 underline hover:text-red-600">
+                            https://t.me/KaufmanEndy
+                        </a>
+                    </p>
+                </div>
+            </div>
+            <button id="close-hero-btn"
+                class="absolute top-2 right-2 bg-red-600 text-white text-xl font-bold w-10 h-10 leading-none hover:bg-red-800 transition">
+                &times;
+            </button>
+        </div>
+    </div>
+
 
     <!-- Всплывающий элемент "Народный Герой" в стиле Mortal Kombat -->
     <div id="mk-popup"
@@ -475,156 +497,113 @@
             </button>
 
             <!-- Изображение, размер уменьшен -->
-            <!-- УДАЛЕНО: rounded-lg для прямых углов -->
+            <!-- Добавлен pointer-events-auto, чтобы оно было кликабельно, и курсор:pointer для UX -->
             <img id="mk-image" src="./assets/people/kaufman-endy/photo.png" alt="Народный Герой"
-                class="w-32 h-32 md:w-40 md:h-40 object-cover border-8 border-red-600 shadow-2xl">
+                class="w-32 h-32 md:w-40 md:h-40 object-cover border-8 border-red-600 shadow-2xl pointer-events-auto cursor-pointer">
         </div>
     </div>
     <!-- Аудио элемент для боевого клича -->
-    <audio id="mk-audio" src="./assets/people/kaufman-endy/sound.mp3" vl preload="auto"></audio>
+    <audio id="mk-audio" src="./assets/people/kaufman-endy/sound.mp3" preload="auto"></audio>
 
     <script>
-        // JavaScript для анимации элементов при скролле (IntersectionObserver)
-
-        const revealElements = document.querySelectorAll('.reveal-hidden');
-        const modal = document.getElementById('prompt-modal');
-        const showBtn = document.getElementById('show-prompt-btn');
-        const closeBtn = document.getElementById('close-prompt-btn');
-
-        // --- Логика модального окна ---
-        function showModal() {
-            modal.classList.remove('hidden');
-        }
-
-        function hideModal() {
-            modal.classList.add('hidden');
-        }
-
-        showBtn.addEventListener('click', showModal);
-        closeBtn.addEventListener('click', hideModal);
-
-        // Закрытие по клику вне модального окна
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                hideModal();
-            }
-        });
-
-
-        // --- Логика скролл-анимации ---
-
-        // Конфигурация для наблюдателя: срабатывает, когда элемент виден на 10%
-        const observerOptions = {
-            root: null, // Относительно viewport
-            rootMargin: '0px',
-            threshold: 0.1 // 10% элемента должно быть видно
-        };
-
-        const observer = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-                // Если элемент виден
-                if (entry.isIntersecting) {
-                    // Добавляем класс, который запускает анимацию
-                    entry.target.classList.add('reveal-visible');
-                    // Перестаем наблюдать за элементом, чтобы анимация не повторялась
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, observerOptions);
-
-        // Начинаем наблюдение за всеми элементами
-        revealElements.forEach(el => {
-            observer.observe(el);
-        });
-
-        // Дополнительный вызов для элементов в шапке, которые могут быть сразу видны
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.reveal-hidden').forEach(el => {
-                // Мгновенно показать элементы в верхней части экрана, если они уже видны
-                if (el.getBoundingClientRect().top < window.innerHeight) {
-                    el.classList.add('reveal-visible');
-                }
-            });
-
-            // Инициализируем цикл "Народного Героя" после загрузки DOM
-            initializeHero();
-        });
-
-
-        // --- Логика Народного Героя (Mortal Kombat Style Pop-up) ---
-        const mkPopup = document.getElementById('mk-popup');
-        const mkImageContainer = document.getElementById('mk-image-container'); // Контейнер для поворота
-        const mkAudio = document.getElementById('mk-audio');
-        const muteBtn = document.getElementById('mute-btn');
+        // --- Глобальное состояние и Константы ---
         const POP_DURATION = 2500; // 2.5 секунды видимости
         const MIN_DELAY = 5000; // Минимум 5 секунд
         const MAX_DELAY = 15000; // Максимум 15 секунд
         let isMuted = false;
+        let heroTimerId = null;
+        let activeModalCount = 0; // Счетчик открытых модальных окон
+
+        // --- DOM Элементы ---
+        const revealElements = document.querySelectorAll('.reveal-hidden');
+
+        // Модальное окно "Оригинальный Приказ"
+        const promptModal = document.getElementById('prompt-modal');
+        const showPromptBtn = document.getElementById('show-prompt-btn');
+        const closePromptBtn = document.getElementById('close-prompt-btn');
+
+        // Модальное окно "Личное Дело"
+        const heroModal = document.getElementById('hero-modal');
+        const closeHeroBtn = document.getElementById('close-hero-btn');
+
+        // Народный Герой (Mortal Kombat Pop-up)
+        const mkPopup = document.getElementById('mk-popup');
+        const mkImageContainer = document.getElementById('mk-image-container');
+        const mkAudio = document.getElementById('mk-audio');
+        const muteBtn = document.getElementById('mute-btn');
+        const mkImage = document.getElementById('mk-image');
+
+        // --- Вспомогательные функции Народного Героя ---
 
         /**
-         * Инициализация состояния звука и слушателя для кнопки.
+         * Управляет непосредственным скрытием Hero UI.
          */
-        function initializeHero() {
-            // 1. Проверяем локальное хранилище для состояния звука
-            const savedMuteState = localStorage.getItem('mkHeroMuted');
-            if (savedMuteState === 'true') {
-                isMuted = true;
-                // Применяем класс, который теперь меняет свойство 'color' на кнопке
-                muteBtn.classList.add('is-muted');
-                muteBtn.setAttribute('aria-label', 'Включить звук');
-            } else {
-                isMuted = false;
-                muteBtn.classList.remove('is-muted');
-                muteBtn.setAttribute('aria-label', 'Отключить звук');
-            }
-
-            // 2. Добавляем слушатель к кнопке
-            muteBtn.addEventListener('click', toggleMute);
-
-            // 3. Запускаем цикл показа
-            scheduleNextPop();
+        function hideHeroUI() {
+            mkPopup.classList.remove('mk-popup-visible');
+            // Сбросить поворот и масштаб контейнера
+            mkImageContainer.style.transform = 'scale(1) rotate(0deg)';
+            // Убедиться, что он находится ниже экрана
+            mkPopup.style.transform = 'translateX(-50%) translateY(100%)';
         }
 
         /**
-         * Переключает состояние mute/unmute.
+         * Очищает текущий таймер для следующего появления Героя.
          */
-        function toggleMute() {
-            isMuted = !isMuted;
-            localStorage.setItem('mkHeroMuted', isMuted);
-
-            if (isMuted) {
-                // Применяем класс для смены цвета на черный
-                muteBtn.classList.add('is-muted');
-                muteBtn.setAttribute('aria-label', 'Включить звук');
-            } else {
-                // Удаляем класс для возврата к красному цвету
-                muteBtn.classList.remove('is-muted');
-                muteBtn.setAttribute('aria-label', 'Отключить звук');
+        function cancelHeroSchedule() {
+            if (heroTimerId) {
+                clearTimeout(heroTimerId);
+                heroTimerId = null;
             }
         }
 
         /**
-         * Генерирует случайное целое число в заданном диапазоне (включительно).
+         * Генерирует случайное целое число.
          */
         function getRandomInt(min, max) {
             return Math.floor(Math.random() * (max - min + 1)) + min;
         }
 
         /**
+         * Планирует следующий показ в случайное время, если нет открытых модальных окон.
+         */
+        function scheduleNextPop() {
+            if (activeModalCount > 0) {
+                console.log("Цикл Героя приостановлен из-за открытого модального окна.");
+                return;
+            }
+
+            cancelHeroSchedule(); // Убедиться, что предыдущий таймер очищен
+
+            const delay = getRandomInt(MIN_DELAY, MAX_DELAY);
+            console.log(`Следующее появление Героя запланировано через ${Math.round(delay / 1000)} сек.`);
+            heroTimerId = setTimeout(popHero, delay);
+        }
+
+        /**
+         * Скрывает всплывающее окно и планирует следующий показ (используется после POP_DURATION).
+         */
+        function hideHeroAndReschedule() {
+            hideHeroUI();
+            scheduleNextPop();
+        }
+
+        /**
          * Показывает всплывающее окно и воспроизводит звук.
          */
         function popHero() {
-            // 1. Рандомизация позиции (от 10% до 90% от ширины экрана)
-            // Добавляем -50% для центрирования самого элемента относительно случайной точки
+            // Если модальное окно открылось прямо перед срабатыванием таймера, отменяем появление
+            if (activeModalCount > 0) {
+                scheduleNextPop(); // Сразу планируем новое появление
+                return;
+            }
+
+            // 1. Рандомизация позиции
             const randomX = getRandomInt(10, 90);
             mkPopup.style.left = `${randomX}%`;
-
-            // Сброс transform для чистого применения при показе
             mkPopup.style.transform = 'translateX(-50%) translateY(100%)';
 
-            // 2. Рандомизация поворота и масштаба (Mortal Kombat Style)
-            const randomRotation = getRandomInt(-10, 10); // Угол от -10 до +10 градусов
-            // Масштаб немного увеличен для драматичности
+            // 2. Рандомизация поворота и масштаба
+            const randomRotation = getRandomInt(-10, 10);
             mkImageContainer.style.transform = `scale(1.15) rotate(${randomRotation}deg)`;
 
             // 3. Показать элемент (поднять его вертикально)
@@ -633,40 +612,122 @@
             // 4. Воспроизвести звук (только если не заглушено)
             if (!isMuted && mkAudio) {
                 mkAudio.currentTime = 0;
-                mkAudio.volume = 0.1;
-                mkAudio.play().catch(e => console.error("Ошибка воспроизведения аудио (могло быть заблокировано браузером до первого взаимодействия):", e));
+                mkAudio.play().catch(e => console.error("Ошибка воспроизведения аудио:", e));
             }
 
             // 5. Планируем скрытие через POP_DURATION
-            setTimeout(hideHero, POP_DURATION);
+            heroTimerId = setTimeout(hideHeroAndReschedule, POP_DURATION);
         }
 
         /**
-         * Скрывает всплывающее окно и планирует следующий показ.
+         * Устанавливает состояние mute/unmute.
          */
-        function hideHero() {
-            // Скрыть элемент
-            mkPopup.classList.remove('mk-popup-visible');
+        function toggleMute() {
+            isMuted = !isMuted;
+            localStorage.setItem('mkHeroMuted', isMuted);
 
-            // Сбросить поворот и масштаб контейнера
-            mkImageContainer.style.transform = 'scale(1) rotate(0deg)';
+            if (isMuted) {
+                muteBtn.classList.add('is-muted');
+                muteBtn.setAttribute('aria-label', 'Включить звук');
+            } else {
+                muteBtn.classList.remove('is-muted');
+                muteBtn.setAttribute('aria-label', 'Отключить звук');
+            }
+        }
 
-            // Сбросить горизонтальный transform для чистого перехода в скрытое состояние
-            mkPopup.style.transform = 'translateX(-50%) translateY(100%)';
 
-            // Планируем следующий показ
-            scheduleNextPop();
+        // --- Логика Модальных Окон ---
+
+        /**
+         * Общая функция для открытия модального окна.
+         * Вызывает немедленное скрытие Героя, если он активен.
+         * @param {HTMLElement} modalElement 
+         */
+        function openModal(modalElement) {
+            modalElement.classList.remove('hidden');
+            activeModalCount++;
+            cancelHeroSchedule(); // Остановить цикл Героя
+
+            // Немедленно скрыть героя, если он виден
+            if (mkPopup.classList.contains('mk-popup-visible')) {
+                hideHeroUI();
+            }
         }
 
         /**
-         * Планирует следующий показ в случайное время.
+         * Общая функция для закрытия модального окна.
+         * @param {HTMLElement} modalElement 
          */
-        function scheduleNextPop() {
-            // Вычисляем случайную задержку между MIN_DELAY и MAX_DELAY
-            const delay = Math.random() * (MAX_DELAY - MIN_DELAY) + MIN_DELAY;
-            console.log(`Следующее появление Героя запланировано через ${Math.round(delay / 1000)} сек.`);
-            setTimeout(popHero, delay);
+        function closeModal(modalElement) {
+            modalElement.classList.add('hidden');
+            activeModalCount = Math.max(0, activeModalCount - 1);
+
+            // Возобновить цикл Героя, если нет других открытых модальных окон
+            if (activeModalCount === 0) {
+                scheduleNextPop();
+            }
         }
+
+        // 1. Модальное окно "Оригинальный Приказ" (Prompt Modal)
+        showPromptBtn.addEventListener('click', () => openModal(promptModal));
+        closePromptBtn.addEventListener('click', () => closeModal(promptModal));
+        promptModal.addEventListener('click', (e) => {
+            if (e.target === promptModal) closeModal(promptModal);
+        });
+
+        // 2. Модальное окно "Личное Дело" (Hero Modal)
+        mkImage.addEventListener('click', () => openModal(heroModal));
+        closeHeroBtn.addEventListener('click', () => closeModal(heroModal));
+        heroModal.addEventListener('click', (e) => {
+            if (e.target === heroModal) closeModal(heroModal);
+        });
+
+        // --- Логика Скролл-анимации ---
+        const observerOptions = {
+            root: null, threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('reveal-visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        revealElements.forEach(el => observer.observe(el));
+
+
+        /**
+         * Инициализация состояния звука и слушателей.
+         */
+        function initializeHero() {
+            const savedMuteState = localStorage.getItem('mkHeroMuted');
+            isMuted = savedMuteState === 'true';
+
+            if (isMuted) {
+                muteBtn.classList.add('is-muted');
+                muteBtn.setAttribute('aria-label', 'Включить звук');
+            } else {
+                muteBtn.classList.remove('is-muted');
+                muteBtn.setAttribute('aria-label', 'Отключить звук');
+            }
+
+            muteBtn.addEventListener('click', toggleMute);
+            scheduleNextPop(); // Запускаем цикл
+        }
+
+        // Инициализация после загрузки DOM
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.reveal-hidden').forEach(el => {
+                if (el.getBoundingClientRect().top < window.innerHeight) {
+                    el.classList.add('reveal-visible');
+                }
+            });
+
+            initializeHero();
+        });
     </script>
 
 </body>
