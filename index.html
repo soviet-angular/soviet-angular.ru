@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Советский Angular</title>
+    <title>СОВЕТСКИЙ ANGULAR: ЧАТ ПРОГРЕССА</title>
     <link rel="icon" type="image/png" href="./assets/favicon/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="./assets/favicon/favicon.svg" />
     <link rel="shortcut icon" href="./assets/favicon/favicon.ico" />
@@ -206,6 +206,25 @@
             background-color: #FFFF00;
             clip-path: polygon(0 50%, 100% 0, 100% 100%, 0 100%);
         }
+
+        /* --- Стили для Народного Героя (Mortal Kombat Pop-up) --- */
+
+        /* Класс, который поднимает весь блок из-за экрана (bottom: 0) */
+        .mk-popup-visible {
+            /* Поднимаем элемент вверх на свою высоту, чтобы он был виден над нижним краем */
+            transform: translateY(-100%) !important;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.27);
+            /* Агрессивный "bounce" */
+        }
+
+        /* Стиль для самого изображения (внутри контейнера) */
+        .mk-popup-visible #mk-image-container {
+            /* Поворот и масштаб будут устанавливаться динамически через JS */
+            /* Желто-красное свечение */
+            box-shadow: 0 0 40px 10px rgba(255, 255, 0, 0.8), 0 0 20px 5px rgba(255, 0, 0, 0.9);
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.27);
+        }
     </style>
 </head>
 
@@ -364,7 +383,7 @@
     <!-- Модальное окно для отображения ТЗ (Скрыто по умолчанию) -->
     <div id="prompt-modal"
         class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex justify-center p-4 py-10 overflow-y-auto transition-opacity duration-300">
-        <!-- ИЗМЕНЕНИЕ: Убран rotate-1 по умолчанию, добавлен md:rotate-1 для десктопа, max-h-full для мобильных -->
+        <!-- Контейнер модального окна: max-h-full для вмещения контента на мобильных -->
         <div
             class="bg-white p-8 max-w-3xl w-full relative border-8 border-red-600 shadow-2xl transform md:rotate-1 transition-transform duration-300 max-h-full overflow-y-auto">
             <h3 class="text-4xl font-extrabold text-black mb-4 border-b-4 border-yellow-400 pb-2">
@@ -385,6 +404,19 @@
         </div>
     </div>
 
+    <!-- Всплывающий элемент "Народный Герой" в стиле Mortal Kombat -->
+    <!-- Изначально скрыт (translate-y-full). Позиция 'left' будет задаваться через JS. -->
+    <div id="mk-popup"
+        class="fixed bottom-0 translate-y-full transform transition-all duration-300 ease-out z-[100] pointer-events-none"
+        style="left: 0;">
+        <div id="mk-image-container" class="transition-transform duration-300 ease-out transform scale-100 rotate-0">
+            <!-- Изображение, размер уменьшен -->
+            <img id="mk-image" src="./assets/people/kyouma/photo.png" alt="Народный Герой"
+                class="w-32 h-32 md:w-40 md:h-40 object-cover border-8 border-red-600 shadow-2xl rounded-lg">
+        </div>
+    </div>
+    <!-- Аудио элемент для боевого клича -->
+    <audio id="mk-audio" src="./assets/people/kyouma/sound.mp3" preload="auto"></audio>
 
     <script>
         // JavaScript для анимации элементов при скролле (IntersectionObserver)
@@ -397,12 +429,10 @@
         // --- Логика модального окна ---
         function showModal() {
             modal.classList.remove('hidden');
-            // document.body.style.overflow = 'hidden'; // Запретить скролл страницы - убрано, т.к. overflow-y-auto на модалке
         }
 
         function hideModal() {
             modal.classList.add('hidden');
-            // document.body.style.overflow = ''; // Восстановить скролл страницы
         }
 
         showBtn.addEventListener('click', showModal);
@@ -450,7 +480,81 @@
                     el.classList.add('reveal-visible');
                 }
             });
+
+            // Инициализируем цикл "Народного Героя" после загрузки DOM
+            scheduleNextPop();
         });
+
+
+        // --- Логика Народного Героя (Mortal Kombat Style Pop-up) ---
+        const mkPopup = document.getElementById('mk-popup');
+        const mkImageContainer = document.getElementById('mk-image-container'); // Контейнер для поворота
+        const mkAudio = document.getElementById('mk-audio');
+        const POP_DURATION = 2500; // 2.5 секунды видимости
+        const MIN_DELAY = 5000; // Минимум 5 секунд
+        const MAX_DELAY = 15000; // Максимум 15 секунд
+
+        /**
+         * Генерирует случайное целое число в заданном диапазоне (включительно).
+         */
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        /**
+         * Показывает всплывающее окно и воспроизводит звук.
+         */
+        function popHero() {
+            // 1. Рандомизация позиции (от 10% до 90% от ширины экрана)
+            // Добавляем -50% для центрирования самого элемента относительно случайной точки
+            const randomX = getRandomInt(10, 90);
+            mkPopup.style.left = `${randomX}%`;
+            mkPopup.style.transform = 'translateX(-50%) translateY(100%)';
+
+            // 2. Рандомизация поворота и масштаба (Mortal Kombat Style)
+            const randomRotation = getRandomInt(-10, 10); // Угол от -10 до +10 градусов
+            // Масштаб немного увеличен для драматичности
+            mkImageContainer.style.transform = `scale(1.15) rotate(${randomRotation}deg)`;
+
+            // 3. Показать элемент (поднять его вертикально)
+            mkPopup.classList.add('mk-popup-visible');
+
+            // 4. Воспроизвести звук
+            if (mkAudio) {
+                mkAudio.currentTime = 0;
+                mkAudio.play().catch(e => console.error("Ошибка воспроизведения аудио (могло быть заблокировано браузером до первого взаимодействия):", e));
+            }
+
+            // 5. Планируем скрытие через POP_DURATION
+            setTimeout(hideHero, POP_DURATION);
+        }
+
+        /**
+         * Скрывает всплывающее окно и планирует следующий показ.
+         */
+        function hideHero() {
+            // Скрыть элемент
+            mkPopup.classList.remove('mk-popup-visible');
+
+            // Сбросить поворот и масштаб контейнера
+            mkImageContainer.style.transform = 'scale(1) rotate(0deg)';
+
+            // Сбросить горизонтальный transform для чистого перехода в скрытое состояние
+            mkPopup.style.transform = 'translateX(-50%) translateY(100%)';
+
+            // Планируем следующий показ
+            scheduleNextPop();
+        }
+
+        /**
+         * Планирует следующий показ в случайное время.
+         */
+        function scheduleNextPop() {
+            // Вычисляем случайную задержку между MIN_DELAY и MAX_DELAY
+            const delay = Math.random() * (MAX_DELAY - MIN_DELAY) + MIN_DELAY;
+            console.log(`Следующее появление Героя запланировано через ${Math.round(delay / 1000)} сек.`);
+            setTimeout(popHero, delay);
+        }
     </script>
 
 </body>
