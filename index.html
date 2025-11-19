@@ -195,6 +195,13 @@
             transform: translateY(-2px);
         }
 
+        /* Стиль для Желтой кнопки в футере (Новая кнопка Отключения Звука) */
+        .footer-button-yellow:hover {
+            background-color: #d97706;
+            /* amber-700 (темно-желтый) */
+            transform: translateY(-2px);
+        }
+
         /* Декоративный диагональный разделитель */
         .diagonal-divider {
             height: 50px;
@@ -385,11 +392,18 @@
 
     <!-- Футер -->
     <footer class="bg-black py-8 border-t-4 border-red-600">
-        <div class="container mx-auto px-6 text-center text-sm md:text-lg text-white opacity-75">
+        <div class="container mx-auto px-6 text-sm md:text-lg text-white opacity-75">
             <div class="flex flex-col md:flex-row justify-center items-center space-y-3 md:space-y-0 md:space-x-8">
-                <!-- Кнопка "ОРИГИНАЛЬНЫЙ ПРИКАЗ" --><button id="show-prompt-btn"
+                <!-- Кнопка 1: "ОРИГИНАЛЬНЫЙ ПРИКАЗ" -->
+                <button id="show-prompt-btn"
                     class="footer-button bg-red-700 text-white font-bold py-2 px-4 uppercase text-sm">
                     ОРИГИНАЛЬНЫЙ ПРИКАЗ
+                </button>
+
+                <!-- Кнопка 2: "ОТКЛЮЧИТЬ ЗВУК" (Новая кнопка) -->
+                <button id="mute-footer-btn"
+                    class="footer-button footer-button-yellow bg-yellow-400 text-black font-bold py-2 px-4 uppercase text-sm">
+                    <!-- Текст будет обновлен JS -->
                 </button>
 
                 <!-- Ссылка на GitHub -->
@@ -411,8 +425,8 @@
                 </p>
             </div>
 
-            <p class="font-light mt-4 reveal-hidden" style="transition-delay: 0.1s;">ВСЕ ВОПРОСЫ В ФОКУСЕ, КОМРАДЫ! 2025
-                ГОД. ПЛАН ВЫПОЛНЕН.</p>
+            <p class="font-light mt-4 text-center reveal-hidden" style="transition-delay: 0.1s;">ВСЕ ВОПРОСЫ В ФОКУСЕ,
+                КОМРАДЫ! 2025 ГОД. ПЛАН ВЫПОЛНЕН.</p>
         </div>
     </footer>
 
@@ -467,7 +481,7 @@
         style="left: 0;">
         <div id="mk-image-container"
             class="relative transition-transform duration-300 ease-out transform scale-100 rotate-0">
-            <!-- Кнопка Отключения Звука -->
+            <!-- Кнопка Отключения Звука (Остается на месте) -->
             <button id="mute-btn" class="absolute top-[-10px] right-[-10px] z-20 pointer-events-auto"
                 aria-label="Отключить звук">
                 <!-- Векторная иконка: Громкий динамик (SVG) -->
@@ -577,8 +591,12 @@
         const mkPopup = document.getElementById('mk-popup');
         const mkImageContainer = document.getElementById('mk-image-container');
         const mkAudio = document.getElementById('mk-audio');
-        const muteBtn = document.getElementById('mute-btn');
+        const muteBtn = document.getElementById('mute-btn'); // Кнопка на всплывающем окне
         const mkImage = document.getElementById('mk-image');
+
+        // Новая кнопка Отключения Звука в Футере
+        const muteFooterBtn = document.getElementById('mute-footer-btn');
+
 
         // --- Вспомогательные функции Народного Героя ---
 
@@ -748,8 +766,7 @@
             // 1. Выбираем нового Героя, гарантируя, что он не повторит предыдущего
             selectRandomHero();
 
-            // 2. Обновляем UI, включая изображение и аудио, на основе нового currentHero.
-            //    Эта операция СИНХРОННА и выполняется ДО того, как элемент станет видимым.
+            // 2. Обновляем UI, включая изображение и аудио, на основе нового currentHero
             updateHeroUI();
 
             // 3. Рандомизация позиции
@@ -767,7 +784,6 @@
             // 6. Воспроизвести звук (только если не заглушено)
             if (!isMuted && mkAudio) {
                 mkAudio.currentTime = 0;
-                mkAudio.volume = 0.1;
                 // Примечание: mkAudio.play() запускает загрузку/воспроизведение, но само
                 // всплывающее окно уже видимо на этом шаге.
                 mkAudio.play().catch(e => console.error("Ошибка воспроизведения аудио:", e));
@@ -778,12 +794,25 @@
         }
 
         /**
+         * Обновляет текст и стили кнопки в футере в соответствии с текущим состоянием isMuted.
+         */
+        function updateFooterMuteButtonUI() {
+            if (isMuted) {
+                muteFooterBtn.textContent = 'ЗВУК ВКЛЮЧИТЬ';
+            } else {
+                muteFooterBtn.textContent = 'ЗВУК ОТКЛЮЧИТЬ';
+            }
+        }
+
+        /**
          * Устанавливает состояние mute/unmute.
+         * Обновляет обе кнопки: на всплывающем окне и в футере.
          */
         function toggleMute() {
             isMuted = !isMuted;
             localStorage.setItem('mkHeroMuted', isMuted);
 
+            // Обновление кнопки на всплывающем окне (muteBtn)
             if (isMuted) {
                 muteBtn.classList.add('is-muted');
                 muteBtn.setAttribute('aria-label', 'Включить звук');
@@ -791,6 +820,9 @@
                 muteBtn.classList.remove('is-muted');
                 muteBtn.setAttribute('aria-label', 'Отключить звук');
             }
+
+            // Обновление кнопки в футере
+            updateFooterMuteButtonUI();
         }
 
 
@@ -876,20 +908,20 @@
             selectRandomHero(); // Инициализирует currentHero
             updateHeroUI(); // Обновляет mkImage и модалку на основе первого выбранного Героя
 
-            // 2. Установить состояние mute
+            // 2. Установить начальное состояние mute
             const savedMuteState = localStorage.getItem('mkHeroMuted');
             isMuted = savedMuteState === 'true';
 
-            if (isMuted) {
-                muteBtn.classList.add('is-muted');
-                muteBtn.setAttribute('aria-label', 'Включить звук');
-            } else {
-                muteBtn.classList.remove('is-muted');
-                muteBtn.setAttribute('aria-label', 'Отключить звук');
-            }
+            // 3. Обновить UI обеих кнопок в соответствии с состоянием
+            toggleMute(); // Вызываем один раз для синхронизации UI
+            toggleMute(); // Вызываем второй раз, чтобы вернуть isMuted к исходному состоянию (т.к. toggleMute инвертирует его)
 
-            muteBtn.addEventListener('click', toggleMute);
-            scheduleNextPop(); // Запускаем цикл
+            // 4. Добавить слушатели событий
+            muteBtn.addEventListener('click', toggleMute); // Кнопка на всплывающем окне
+            muteFooterBtn.addEventListener('click', toggleMute); // Новая кнопка в футере
+
+            // 5. Запустить цикл
+            scheduleNextPop();
         }
 
         // Инициализация после загрузки DOM
