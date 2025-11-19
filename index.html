@@ -219,11 +219,62 @@
 
         /* Стиль для самого изображения (внутри контейнера) */
         .mk-popup-visible #mk-image-container {
-            /* Поворот и масштаб будут устанавливаться динамически через JS */
-            /* Желто-красное свечение */
-            box-shadow: 0 0 40px 10px rgba(255, 255, 0, 0.8), 0 0 20px 5px rgba(255, 0, 0, 0.9);
-            border-radius: 12px;
+            /* УДАЛЕНО: box-shadow (освещение) */
+            /* УДАЛЕНО: border-radius (прямые углы) */
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.27);
+        }
+
+        /* --- Стили для Кнопки Отключения Звука (Советский Запрет) --- */
+
+        #mute-btn {
+            width: 40px;
+            height: 40px;
+            background-color: #FFFF00;
+            /* Желтый фон (постоянно по требованию) */
+            /* ИЗМЕНЕНИЕ: Увеличена ширина рамки до 8px для соответствия Герою */
+            border: 8px solid #DC2626;
+            /* Красная рамка, как у рамки Героя (8px, цвет red-600) */
+            border-radius: 50%;
+            /* Круглая форма */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            /* УДАЛЕНО: box-shadow (тень) */
+            /* ИЗМЕНЕНИЕ: Добавлен transition для opacity 0.3s */
+            transition: all 0.2s, opacity 0.3s;
+
+            opacity: 0;
+            /* НОВОЕ: Скрыто по умолчанию */
+
+            /* Устанавливаем свойство 'color', которое SVG path с fill="currentColor" будет наследовать */
+            color: #DC2626;
+            /* Красный динамик (Unmuted) */
+        }
+
+        /* НОВОЕ: Показываем кнопку, когда активен Народный Герой */
+        #mk-popup.mk-popup-visible #mute-btn {
+            opacity: 1;
+        }
+
+        #mute-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Иконка (Speaker Icon SVG) */
+        #mute-icon-svg {
+            /* Цвет теперь управляется свойством 'color' на кнопке */
+            position: relative;
+            width: 24px;
+            height: 24px;
+            transition: color 0.2s;
+            /* Анимируем свойство 'color' */
+        }
+
+        /* Muted State: Меняем цвет иконки на черный */
+        #mute-btn.is-muted {
+            color: #000000;
+            /* Черный динамик (Muted) */
         }
     </style>
 </head>
@@ -405,18 +456,32 @@
     </div>
 
     <!-- Всплывающий элемент "Народный Герой" в стиле Mortal Kombat -->
-    <!-- Изначально скрыт (translate-y-full). Позиция 'left' будет задаваться через JS. -->
     <div id="mk-popup"
         class="fixed bottom-0 translate-y-full transform transition-all duration-300 ease-out z-[100] pointer-events-none"
         style="left: 0;">
-        <div id="mk-image-container" class="transition-transform duration-300 ease-out transform scale-100 rotate-0">
+        <div id="mk-image-container"
+            class="relative transition-transform duration-300 ease-out transform scale-100 rotate-0">
+            <!-- Кнопка Отключения Звука -->
+            <button id="mute-btn" class="absolute top-[-10px] right-[-10px] z-20 pointer-events-auto"
+                aria-label="Отключить звук">
+                <!-- Векторная иконка: Громкий динамик (SVG) -->
+                <svg id="mute-icon-svg" viewBox="0 0 640 640" class="w-6 h-6" xmlns="http://www.w3.org/2000/svg"
+                    style="display: block;">
+                    <!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.-->
+                    <path
+                        d="M256 416L208 416C181.5 416 160 394.5 160 368L160 272C160 245.5 181.5 224 208 224L256 224L390.1 104.8C396.5 99.1 404.7 96 413.2 96C432.4 96 448 111.6 448 130.8L448 509.2C448 528.4 432.4 544 413.2 544C404.7 544 396.5 540.9 390.1 535.2L256 416z"
+                        fill="currentColor" />
+                </svg>
+            </button>
+
             <!-- Изображение, размер уменьшен -->
-            <img id="mk-image" src="./assets/people/kyouma/photo.png" alt="Народный Герой"
-                class="w-32 h-32 md:w-40 md:h-40 object-cover border-8 border-red-600 shadow-2xl rounded-lg">
+            <!-- УДАЛЕНО: rounded-lg для прямых углов -->
+            <img id="mk-image" src="./assets/people/kaufman-endy/photo.jpg" alt="Народный Герой"
+                class="w-32 h-32 md:w-40 md:h-40 object-cover border-8 border-red-600 shadow-2xl">
         </div>
     </div>
     <!-- Аудио элемент для боевого клича -->
-    <audio id="mk-audio" src="./assets/people/kyouma/sound.mp3" preload="auto"></audio>
+    <audio id="mk-audio" src="./assets/people/kaufman-endy/sound.mp3" preload="auto"></audio>
 
     <script>
         // JavaScript для анимации элементов при скролле (IntersectionObserver)
@@ -482,7 +547,7 @@
             });
 
             // Инициализируем цикл "Народного Героя" после загрузки DOM
-            scheduleNextPop();
+            initializeHero();
         });
 
 
@@ -490,9 +555,53 @@
         const mkPopup = document.getElementById('mk-popup');
         const mkImageContainer = document.getElementById('mk-image-container'); // Контейнер для поворота
         const mkAudio = document.getElementById('mk-audio');
+        const muteBtn = document.getElementById('mute-btn');
         const POP_DURATION = 2500; // 2.5 секунды видимости
         const MIN_DELAY = 5000; // Минимум 5 секунд
         const MAX_DELAY = 15000; // Максимум 15 секунд
+        let isMuted = false;
+
+        /**
+         * Инициализация состояния звука и слушателя для кнопки.
+         */
+        function initializeHero() {
+            // 1. Проверяем локальное хранилище для состояния звука
+            const savedMuteState = localStorage.getItem('mkHeroMuted');
+            if (savedMuteState === 'true') {
+                isMuted = true;
+                // Применяем класс, который теперь меняет свойство 'color' на кнопке
+                muteBtn.classList.add('is-muted');
+                muteBtn.setAttribute('aria-label', 'Включить звук');
+            } else {
+                isMuted = false;
+                muteBtn.classList.remove('is-muted');
+                muteBtn.setAttribute('aria-label', 'Отключить звук');
+            }
+
+            // 2. Добавляем слушатель к кнопке
+            muteBtn.addEventListener('click', toggleMute);
+
+            // 3. Запускаем цикл показа
+            scheduleNextPop();
+        }
+
+        /**
+         * Переключает состояние mute/unmute.
+         */
+        function toggleMute() {
+            isMuted = !isMuted;
+            localStorage.setItem('mkHeroMuted', isMuted);
+
+            if (isMuted) {
+                // Применяем класс для смены цвета на черный
+                muteBtn.classList.add('is-muted');
+                muteBtn.setAttribute('aria-label', 'Включить звук');
+            } else {
+                // Удаляем класс для возврата к красному цвету
+                muteBtn.classList.remove('is-muted');
+                muteBtn.setAttribute('aria-label', 'Отключить звук');
+            }
+        }
 
         /**
          * Генерирует случайное целое число в заданном диапазоне (включительно).
@@ -509,6 +618,8 @@
             // Добавляем -50% для центрирования самого элемента относительно случайной точки
             const randomX = getRandomInt(10, 90);
             mkPopup.style.left = `${randomX}%`;
+
+            // Сброс transform для чистого применения при показе
             mkPopup.style.transform = 'translateX(-50%) translateY(100%)';
 
             // 2. Рандомизация поворота и масштаба (Mortal Kombat Style)
@@ -519,8 +630,8 @@
             // 3. Показать элемент (поднять его вертикально)
             mkPopup.classList.add('mk-popup-visible');
 
-            // 4. Воспроизвести звук
-            if (mkAudio) {
+            // 4. Воспроизвести звук (только если не заглушено)
+            if (!isMuted && mkAudio) {
                 mkAudio.currentTime = 0;
                 mkAudio.play().catch(e => console.error("Ошибка воспроизведения аудио (могло быть заблокировано браузером до первого взаимодействия):", e));
             }
