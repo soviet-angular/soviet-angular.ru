@@ -745,31 +745,35 @@
                 return;
             }
 
-            // Выбираем нового Героя, гарантируя, что он не повторит предыдущего
+            // 1. Выбираем нового Героя, гарантируя, что он не повторит предыдущего
             selectRandomHero();
 
-            // Обновляем UI, включая изображение и аудио, на основе нового currentHero
+            // 2. Обновляем UI, включая изображение и аудио, на основе нового currentHero.
+            //    Эта операция СИНХРОННА и выполняется ДО того, как элемент станет видимым.
             updateHeroUI();
 
-            // 1. Рандомизация позиции
+            // 3. Рандомизация позиции
             const randomX = getRandomInt(10, 90);
             mkPopup.style.left = `${randomX}%`;
             mkPopup.style.transform = 'translateX(-50%) translateY(100%)';
 
-            // 2. Рандомизация поворота и масштаба
+            // 4. Рандомизация поворота и масштаба
             const randomRotation = getRandomInt(-10, 10);
             mkImageContainer.style.transform = `scale(1.15) rotate(${randomRotation}deg)`;
 
-            // 3. Показать элемент (поднять его вертикально)
+            // 5. Показать элемент (поднять его вертикально)
             mkPopup.classList.add('mk-popup-visible');
 
-            // 4. Воспроизвести звук (только если не заглушено)
+            // 6. Воспроизвести звук (только если не заглушено)
             if (!isMuted && mkAudio) {
                 mkAudio.currentTime = 0;
+                mkAudio.volume = 0.1;
+                // Примечание: mkAudio.play() запускает загрузку/воспроизведение, но само
+                // всплывающее окно уже видимо на этом шаге.
                 mkAudio.play().catch(e => console.error("Ошибка воспроизведения аудио:", e));
             }
 
-            // 5. Планируем скрытие через POP_DURATION
+            // 7. Планируем скрытие через POP_DURATION
             heroTimerId = setTimeout(hideHeroAndReschedule, POP_DURATION);
         }
 
