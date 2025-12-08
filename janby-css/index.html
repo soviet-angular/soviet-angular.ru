@@ -1,1165 +1,1130 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { RefreshCw, Zap, BookOpen, CheckCircle, XCircle } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Продвинутая Frontend Викторина (Ванильный JS)</title>
+    <style>
+        /* --- Общие Стили (Dark Theme, JetBrains Mono) --- */
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        :root {
+            --color-bg-dark: #0F172A;
+            --color-bg-card: #1E293B;
+            --color-text-light: #E2E8F0;
+            --color-text-secondary: #94A3B8;
+            --color-accent-cyan: #38BDF8;
+            --color-accent-blue: #2563EB;
+            --color-success: #10B981;
+            --color-error: #EF4444;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
 
-// --- Данные Вопросов (20 продвинутых вопросов) ---
-const hardQuestions = [
-    {
-        id: 1,
-        question: "Какое свойство CSS Grid позволяет создать 'Masonry' (кирпичную кладку) макет, когда элементы автоматически заполняют доступные вертикальные пробелы, при этом обеспечивая отзывчивость?",
-        options: [
-            { text: "grid-auto-flow: dense;", isCorrect: false },
-            { text: "grid-template-rows: masonry;", isCorrect: true },
-            { text: "align-items: start; justify-content: start;", isCorrect: false },
-            { text: "grid-auto-flow: column;", isCorrect: false }
-        ],
-        explanation: "Свойство 'grid-template-rows: masonry' (или 'grid-template-columns: masonry') в настоящее время находится в статусе черновика, но является целевым свойством для создания макетов 'кирпичной кладки' в нативном CSS Grid, избегая сложных JavaScript-решений. На момент написания, оно поддерживается ограниченно, но является правильным ответом для продвинутых будущих концепций.",
-        resources: [
-            { title: "MDN: CSS Grid Layout Module Level 3 Masonry", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Grid_Layout/Masonry_Layout" }
-        ],
-        demoHtml: `
-            <div class="grid-container">
-                <div class="item h-16">Элемент 1 (h-16)</div>
-                <div class="item h-28">Элемент 2 (h-28)</div>
-                <div class="item h-20">Элемент 3 (h-20)</div>
-                <div class="item h-16">Элемент 4 (h-16)</div>
-                <div class="item h-32">Элемент 5 (h-32)</div>
-            </div>
-        `,
-        demoCss: `
-            .grid-container {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 8px;
-            }
-            .item {
-                background-color: #38BDF8; /* Cyan акцент */
-                color: #0F172A; /* Темный текст на акценте */
-                padding: 12px;
-                border-radius: 6px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                min-height: 4rem; 
-                font-size: 12px;
-                font-family: 'JetBrains Mono', monospace; /* Применяем шрифт в демо */
-            }
-            .h-16 { min-height: 4rem; }
-            .h-20 { min-height: 5rem; }
-            .h-28 { min-height: 7rem; }
-            .h-32 { min-height: 8rem; }
-        `
-    },
-    {
-        id: 2,
-        question: "Какое из этих свойств НЕ создает новый Контекст Стекирования (Stacking Context)?",
-        options: [
-            { text: "transform: none;", isCorrect: true },
-            { text: "position: fixed;", isCorrect: false },
-            { text: "filter: blur(1px);", isCorrect: false },
-            { text: "will-change: opacity;", isCorrect: false }
-        ],
-        explanation: "Свойство 'transform: none' не создает новый контекст стекирования. Любое значение 'transform', отличное от 'none' (например, 'translateY(0)'), создает новый контекст. Свойства 'position: fixed', 'filter' и 'will-change' (если его значение соответствует свойствам, создающим контекст) также создают новый контекст.",
-        resources: [
-            { title: "MDN: Понимание z-index: Контекст Стекирования", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Positioning/Understanding_z_index/The_stacking_context" }
-        ],
-        demoHtml: `
-            <div class="parent">
-                <div class="box box-a">Box A (z-index: 10)</div>
-                <div class="box box-b">Box B (transform: scale(1.1))</div>
-            </div>
-        `,
-        demoCss: `
-            .parent { position: relative; width: 100%; height: 100px; }
-            .box {
-                position: absolute;
-                width: 70px;
-                height: 70px;
-                color: white;
-                padding: 8px;
-                border-radius: 4px;
-                display: flex;
-                align-items: center;
-                font-size: 10px;
-                top: 15px;
-                font-family: 'JetBrains Mono', monospace;
-            }
-            .box-a {
-                background-color: #2563EB; /* Синий */
-                left: 10px;
-                z-index: 10;
-            }
-            .box-b {
-                background-color: #38BDF8; /* Cyan акцент */
-                left: 50px;
-                z-index: 5;
-                /* transform: scale(1.1) создает новый Stacking Context, и Box B окажется поверх Box A, игнорируя z-index */
-                transform: scale(1.1); 
-            }
-        `
-    },
-    {
-        id: 3,
-        question: "Как можно использовать функцию `calc()` в CSS для обеспечения минимальной ширины 300px, максимальной ширины 500px, при этом ширина должна быть 50% от родителя (в пределах min/max)?",
-        options: [
-            { text: "width: clamp(300px, 50vw, 500px);", isCorrect: true },
-            { text: "width: calc(min(500px, max(300px, 50%)));", isCorrect: false },
-            { text: "width: minmax(300px, 500px);", isCorrect: false },
-            { text: "width: max(300px, min(50%, 500px));", isCorrect: false }
-        ],
-        explanation: "Функция `clamp(MIN, PREFERRED, MAX)` идеально подходит для этого сценария: она устанавливает минимальное (300px) и максимальное (500px) значения, позволяя предпочтительному (50vw или 50%) значению масштабироваться между ними. (Примечание: 50vw было бы лучше, но 50% также допустимо в зависимости от контекста).",
-        resources: [
-            { title: "MDN: CSS функция clamp()", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/clamp" }
-        ],
-        demoHtml: `
-            <div class="wrapper">
-                <div class="resizable-box">Потяни за правый нижний угол</div>
-            </div>
-        `,
-        demoCss: `
-            .wrapper { width: 90%; background: #1E293B; padding: 20px; resize: horizontal; overflow: auto; max-width: 500px; margin: 0 auto; border-radius: 6px; }
-            .resizable-box {
-                width: clamp(100px, 50%, 400px);
-                height: 50px;
-                background-color: #38BDF8; /* Cyan акцент */
-                color: #0F172A;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 4px;
-                font-size: 14px;
-                margin: 10px auto;
-                font-family: 'JetBrains Mono', monospace;
-            }
-        `
-    },
-    {
-        id: 4,
-        question: "Какая из комбинаций Flexbox/Grid свойств наилучшим образом предотвращает 'Layout Thrashing' (насильственный синхронный макет) при динамическом добавлении или удалении элементов в JS?",
-        options: [
-            { text: "Использование `width: auto` и `height: auto`.", isCorrect: false },
-            { text: "Использование `grid-template-areas`.", isCorrect: false },
-            { text: "Использование `gap` вместо `margin` для создания промежутков.", isCorrect: true },
-            { text: "Использование `overflow: scroll`.", isCorrect: false }
-        ],
-        explanation: "Layout Thrashing — это когда JS читает, а затем записывает свойства, требующие перерасчета макета (например, `offsetWidth`, `margin`). Использование свойства `gap` (Flexbox/Grid) вместо `margin` для промежутков позволяет браузеру выполнять расчеты пространства более эффективно, как часть композиции, а не принудительного пересчета макета.",
-        resources: [
-            { title: "CSS-Tricks: Почему стоит использовать `gap` (и его связь с производительностью)", url: "https://css-tricks.com/almanac/properties/g/gap/" }
-        ],
-        demoHtml: `
-            <div class="flex-container gap-demo">
-                <div class="item">Элемент 1</div>
-                <div class="item">Элемент 2</div>
-                <div class="item">Элемент 3</div>
-            </div>
-        `,
-        demoCss: `
-            .flex-container {
-                display: flex;
-                background: #1E293B; /* Темный фон */
-                padding: 10px;
-                border-radius: 6px;
-            }
-            .gap-demo {
-                gap: 16px; /* Используем gap, более производительно */
-            }
-            .item {
-                background-color: #38BDF8; /* Cyan акцент */
-                color: #0F172A;
-                padding: 12px;
-                border-radius: 4px;
-                flex-grow: 1;
-                text-align: center;
-                font-family: 'JetBrains Mono', monospace;
-            }
-        `
-    },
-    {
-        id: 5,
-        question: "Какую семантическую проблему решает использование `aria-live='polite'` в HTML?",
-        options: [
-            { text: "Обеспечивает, чтобы элемент был доступен для навигации с клавиатуры.", isCorrect: false },
-            { text: "Указывает, что содержимое элемента изменяется, и вспомогательные технологии должны объявить об этом, когда пользователь не занят.", isCorrect: true },
-            { text: "Создает интерактивную область, которая может быть свернута и развернута.", isCorrect: false },
-            { text: "Заставляет браузер загрузить элемент асинхронно.", isCorrect: false }
-        ],
-        explanation: "Атрибут `aria-live='polite'` используется для динамически обновляющихся областей страницы (например, счетчиков, результатов поиска, уведомлений) и указывает скринридерам, что об изменениях следует объявить, когда пользователь закончит текущую задачу, не прерывая его.",
-        resources: [
-            { title: "MDN: ARIA Live Regions", url: "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/ARIA_Live_Regions" }
-        ],
-        demoHtml: `
-            <button onclick="updateStatus()" class="btn">Запустить Апдейт</button>
-            <div id="status-message" aria-live="polite" class="status-box">Статус: Исходный</div>
+        body {
+            font-family: var(--font-mono);
+            background-color: var(--color-bg-dark);
+            color: var(--color-text-light);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
 
-            <script>
-                let count = 0;
-                function updateStatus() {
-                    count++;
-                    const statusBox = document.getElementById('status-message');
-                    statusBox.textContent = 'Статус: Резалт ' + count + ' успешно залит.';
+        #app-container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--color-bg-card);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            color: var(--color-accent-cyan);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* --- Компонент Кнопки --- */
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: var(--color-accent-blue);
+            color: var(--color-text-light);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            font-family: var(--font-mono);
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            background-color: #1D4ED8;
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        /* --- Карточка Вопроса --- */
+        .question-card {
+            border: 1px solid var(--color-accent-cyan);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: rgba(56, 189, 248, 0.05); /* Легкий циановый фон */
+        }
+
+        .question-text {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        /* --- Кнопки Ответов --- */
+        .option-btn {
+            width: 100%;
+            text-align: left;
+            margin: 8px 0;
+            background-color: var(--color-bg-dark);
+            border: 1px solid var(--color-text-secondary);
+            color: var(--color-text-light);
+            padding: 12px;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            background-color: #334155;
+            border-color: var(--color-accent-cyan);
+        }
+
+        .option-btn:disabled {
+            cursor: default;
+        }
+
+        /* --- Стиль для выбранных и правильных ответов --- */
+        .correct {
+            background-color: var(--color-success);
+            color: var(--color-bg-dark);
+            border-color: var(--color-success);
+            font-weight: bold;
+        }
+
+        .incorrect {
+            background-color: var(--color-error);
+            color: var(--color-bg-dark);
+            border-color: var(--color-error);
+            font-weight: bold;
+        }
+
+        /* --- Секция Объяснения --- */
+        .explanation-section {
+            margin-top: 20px;
+            padding: 15px;
+            border-left: 5px solid var(--color-accent-cyan);
+            background-color: #162030;
+            border-radius: 4px;
+        }
+
+        .explanation-section h3 {
+            color: var(--color-accent-cyan);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 0;
+            font-size: 16px;
+        }
+        
+        .explanation-section p {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+        }
+
+        .explanation-section a {
+            color: var(--color-accent-cyan);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        /* --- Секция Демо --- */
+        .demo-section {
+            margin-top: 15px;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 10px;
+            background: #090e18;
+        }
+
+        .demo-section h4 {
+            color: var(--color-text-light);
+            font-size: 14px;
+            margin-top: 0;
+            border-bottom: 1px dashed #334155;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+
+        /* Стили для кода (для красоты) */
+        .code-block {
+            background: #000;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #E2E8F0;
+            white-space: pre-wrap; /* Перенос длинных строк */
+        }
+        .code-block strong { color: var(--color-accent-cyan); } /* Подсветка ключевых слов */
+
+        /* --- Результаты --- */
+        .results-section {
+            text-align: center;
+            padding: 30px;
+            border: 2px solid var(--color-accent-cyan);
+            border-radius: 12px;
+            margin-top: 20px;
+            background: #142036;
+        }
+
+        .score-display {
+            font-size: 36px;
+            font-weight: bold;
+            color: var(--color-success);
+            margin: 10px 0;
+        }
+
+        /* --- Flex/Grid Demo Styles (для корректного отображения встроенных демо) --- */
+        /* Эти стили вставляются в DOM через JS */
+        #demo-styles {
+            white-space: pre; /* Сохраняет отступы для читаемости CSS */
+            margin-top: 10px;
+            font-size: 10px;
+            color: var(--color-text-secondary);
+        }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <h1><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><path d="M4 14.5V21a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-6.5"/><path d="M12 2v12.5"/><path d="M7 9l5-5 5 5"/></svg> Продвинутая Frontend Викторина</h1>
+
+    <div id="quiz-content">
+        </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+        <p id="progress-text" style="color: var(--color-accent-cyan);"></p>
+        <button id="next-button" class="btn" style="display: none;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 5px;"><path d="M13 17l5-5-5-5M6 17l5-5-5-5"/></svg>
+            Далее
+        </button>
+    </div>
+</div>
+
+<script>
+    // --- ИМИТАЦИЯ ДАННЫХ ВОПРОСОВ (из вашего React-кода) ---
+    const hardQuestions = ${JSON.stringify(require('./questions.js'), null, 4)}; // В идеале, импортировать из файла, но здесь вставляем как есть.
+
+    // Вам нужно было заменить импорт hardQuestions на обычный массив:
+    const hardQuestions = [
+        // Вопрос 1
+        {
+            id: 1,
+            question: "Какое свойство CSS Grid позволяет создать 'Masonry' (кирпичную кладку) макет, когда элементы автоматически заполняют доступные вертикальные пробелы, при этом обеспечивая отзывчивость?",
+            options: [
+                { text: "grid-auto-flow: dense;", isCorrect: false },
+                { text: "grid-template-rows: masonry;", isCorrect: true }, // *Правильный ответ
+                { text: "align-items: start; justify-content: start;", isCorrect: false },
+                { text: "grid-auto-flow: column;", isCorrect: false }
+            ],
+            explanation: "Свойство 'grid-template-rows: masonry' (или 'grid-template-columns: masonry') в настоящее время находится в статусе черновика, но является целевым свойством для создания макетов 'кирпичной кладки' в нативном CSS Grid, избегая сложных JavaScript-решений. На момент написания, оно поддерживается ограниченно, но является правильным ответом для продвинутых будущих концепций.",
+            resources: [
+                { title: "MDN: CSS Grid Layout Module Level 3 Masonry", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Grid_Layout/Masonry_Layout" }
+            ],
+            demoHtml: `
+                <div class="grid-container">
+                    <div class="item h-16">Элемент 1 (h-16)</div>
+                    <div class="item h-28">Элемент 2 (h-28)</div>
+                    <div class="item h-20">Элемент 3 (h-20)</div>
+                    <div class="item h-16">Элемент 4 (h-16)</div>
+                    <div class="item h-32">Элемент 5 (h-32)</div>
+                </div>
+            `,
+            demoCss: `
+                .grid-container {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 8px;
                 }
-            </script>
-        `,
-        demoCss: `
-            .status-box {
-                border: 1px solid #334155; /* Серый */
-                padding: 10px;
-                margin-top: 10px;
-                border-radius: 6px;
-                background: #1E293B; /* Темный фон */
-                color: #94A3B8;
-                font-family: 'JetBrains Mono', monospace;
-            }
-            .btn {
-                background-color: #38BDF8; /* Cyan акцент */
-                color: #0F172A;
-                padding: 8px 12px;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-                font-family: 'JetBrains Mono', monospace;
-            }
-        `
-    },
-    {
-        id: 6,
-        question: "В чем основное преимущество использования `@layer` в CSS (Cascade Layers)?",
-        options: [
-            { text: "Полностью устраняет необходимость в специфичности.", isCorrect: false },
-            { text: "Позволяет отложить загрузку стилей до момента, когда они понадобятся.", isCorrect: false },
-            { text: "Обеспечивает, что порядок объявления слоев в CSS важнее специфичности селекторов внутри слоев.", isCorrect: true },
-            { text: "Ограничивает применение стилей определенным элементом Shadow DOM.", isCorrect: false }
-        ],
-        explanation: "Слои каскада (Cascade Layers) решают проблему специфичности: стили в более поздних слоях всегда имеют приоритет над стилями в более ранних слоях, независимо от их специфичности. Это дает разработчикам гораздо более предсказуемый контроль над CSS.",
-        resources: [
-            { title: "MDN: CSS @layer (Каскадные слои)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/@layer" }
-        ],
-        demoHtml: `
-            <div class="demo-box">Демонстрационный Блок</div>
-        `,
-        demoCss: `
-            /* Слой 'reset' */
-            @layer reset {
-                .demo-box { background-color: #1f2937; color: white; padding: 10px; } /* Низкая специфичность */
-            }
-
-            /* Слой 'components' */
-            @layer components {
-                .demo-box { background-color: #0c4a6e; } /* Средняя специфичность */
-            }
-
-            /* Слой 'utilities' */
-            @layer utilities {
-                /* Этот слой побеждает предыдущие, даже если его специфичность ниже. */
-                .demo-box { background-color: #38BDF8; } 
-            }
-
-            /* Базовые стили */
-            .demo-box {
-                width: 150px;
-                height: 50px;
-                border-radius: 4px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin-top: 5px;
-                font-family: 'JetBrains Mono', monospace;
-            }
-        `
-    },
-    {
-        id: 7,
-        question: "Для чего используется Web API `Intersection Observer`?",
-        options: [
-            { text: "Для отслеживания изменений размера элемента.", isCorrect: false },
-            { text: "Для обнаружения, когда элемент входит в область просмотра (Viewport) или выходит из нее.", isCorrect: true },
-            { text: "Для наблюдения за изменением атрибутов или дочерних элементов в DOM.", isCorrect: false },
-            { text: "Для отслеживания позиции курсора мыши над элементом.", isCorrect: false }
-        ],
-        explanation: "Intersection Observer - это асинхронный API, который позволяет эффективно определять, когда элемент 'пересекается' с областью просмотра или другим элементом-предком. Это используется для ленивой загрузки (lazy loading), инфинитного скроллинга и отслеживания рекламы, и он гораздо более производительный, чем привязка к событию `scroll`.",
-        resources: [
-            { title: "MDN: Intersection Observer API", url: "https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API" }
-        ],
-        demoHtml: `
-            <div class="scroll-area">
-                <div class="spacer">Скролль Вниз</div>
-                <div id="target-element" class="target">Цель (Ловлю Intersection)</div>
-                <div class="spacer">...</div>
-            </div>
-            <div id="info" class="info">Статус: Аут-оф-Вьюпорт</div>
-
-            <script>
-                const target = document.getElementById('target-element');
-                const info = document.getElementById('info');
-
-                const observer = new IntersectionObserver(entries => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            info.textContent = 'Статус: В Вьюпорте';
-                            target.style.backgroundColor = '#38BDF8';
-                        } else {
-                            info.textContent = 'Статус: Аут-оф-Вьюпорт';
-                            target.style.backgroundColor = '#2563EB';
-                        }
-                    });
-                }, { threshold: 0.1 });
-
-                observer.observe(target);
-            </script>
-        `,
-        demoCss: `
-            .scroll-area { height: 150px; overflow-y: scroll; border: 1px solid #334155; padding: 10px; background: #0F172A; border-radius: 6px; }
-            .spacer { height: 100px; text-align: center; color: #64748B; font-size: 12px; font-family: 'JetBrains Mono', monospace; }
-            .target {
-                height: 50px;
-                background-color: #2563EB;
-                color: white;
-                padding: 10px;
-                margin: 20px 0;
-                border-radius: 4px;
-                transition: background-color 0.3s;
-                text-align: center;
-                font-family: 'JetBrains Mono', monospace;
-            }
-            .info {
-                margin-top: 10px;
-                padding: 8px;
-                background-color: #0F172A;
-                border: 1px solid #38BDF8;
-                border-radius: 4px;
-                font-size: 14px;
-                color: #E2E8F0;
-                font-family: 'JetBrains Mono', monospace;
-            }
-        `
-    },
-    {
-        id: 8,
-        question: "Какое из этих Flexbox-свойств позволяет изменить порядок элементов, НЕ изменяя их порядок в DOM (структуре документа), что важно для A11y?",
-        options: [
-            { text: "align-items", isCorrect: false },
-            { text: "justify-content", isCorrect: false },
-            { text: "order", isCorrect: true },
-            { text: "flex-basis", isCorrect: false }
-        ],
-        explanation: "Свойство `order` меняет визуальный порядок элементов в Flex/Grid-контейнере. Это является проблемой доступности, так как порядок чтения с помощью скринридера (Tab-последовательность) определяется порядком в DOM, а не визуальным порядком. Избегайте использования `order` для изменения логического порядка.",
-        resources: [
-            { title: "MDN: CSS order property (Проблемы доступности)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/order#accessibility_concerns" }
-        ],
-        demoHtml: `
-            <div class="flex-container">
-                <div class="item order-2">1. Элемент A (Order 2)</div>
-                <div class="item order-3">2. Элемент B (Order 3)</div>
-                <div class="item order-1">3. Элемент C (Order 1)</div>
-            </div>
-        `,
-        demoCss: `
-            .flex-container {
-                display: flex;
-                background: #1E293B; /* Темный фон */
-                padding: 10px;
-                border-radius: 6px;
-            }
-            .item {
-                background-color: #38BDF8; /* Cyan акцент */
-                color: #0F172A;
-                padding: 12px;
-                margin: 4px;
-                border-radius: 4px;
-                flex: 1;
-                text-align: center;
-                font-size: 12px;
-                font-family: 'JetBrains Mono', monospace;
-            }
-            .order-1 { order: 1; }
-            .order-2 { order: 2; }
-            .order-3 { order: 3; }
-        `
-    },
-    {
-        id: 9,
-        question: "В чем основной побочный эффект или риск при использовании свойства `will-change` для оптимизации анимации?",
-        options: [
-            { text: "Свойство `will-change` не работает на мобильных устройствах.", isCorrect: false },
-            { text: "Немедленное создание нового контекста стекирования (Stacking Context).", isCorrect: false },
-            { text: "Увеличение потребления памяти браузером за счет принудительного создания слоя GPU, даже если анимация не запущена.", isCorrect: true },
-            { text: "Свойство `will-change` предотвращает использование переходов CSS.", isCorrect: false }
-        ],
-        explanation: "Если 'will-change' применяется бездумно и надолго, он может привести к перерасходу ресурсов GPU и увеличению памяти, ухудшая производительность. Его следует использовать только непосредственно перед анимацией и отключать после нее.",
-        resources: [
-            { title: "MDN: will-change CSS property", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/will-change" }
-        ],
-        demoHtml: `
-            <div class="box-note">
-                <p>Использование <code>will-change: transform;</code> переносит элемент на GPU, что ускоряет анимацию, но может увеличить потребление памяти, если используется постоянно.</p>
-            </div>
-        `,
-        demoCss: `
-            .box-note {
-                padding: 15px;
-                background-color: #0F172A;
-                border: 1px solid #38BDF8;
-                border-radius: 6px;
-                font-family: 'JetBrains Mono', monospace;
-            }
-            .box-note p { font-size: 12px; margin: 0; color: #38BDF8; }
-        `
-    },
-    {
-        id: 10,
-        question: "Какая из этих техник является наиболее производительной (наименьшее количество перерисовок/пересчетов макета) для создания анимации сдвига элемента (перемещение по X/Y)?",
-        options: [
-            { text: "Анимация свойства `left` или `top`.", isCorrect: false },
-            { text: "Анимация свойства `margin`.", isCorrect: false },
-            { text: "Анимация свойства `transform: translate()`.", isCorrect: true },
-            { text: "Анимация свойства `position: absolute`.", isCorrect: false }
-        ],
-        explanation: "Свойства `transform` и `opacity` являются 'композитными', что означает, что их анимация может быть выполнена на GPU (аппаратное ускорение) без принудительного пересчета макета (Layout) или перерисовки (Paint). Свойства `left`, `top`, `margin` и `position` вызывают дорогостоящие пересчеты макета.",
-        resources: [
-            { title: "CSS Triggers (понимание, что вызывает пересчет)", url: "https://csstriggers.com/" }
-        ],
-        demoHtml: `
-            <div class="animate-box">Двигаю</div>
-            <button onclick="startAnimation()" class="btn">Запустить Transform Анимку</button>
-
-            <script>
-                function startAnimation() {
-                    const box = document.querySelector('.animate-box');
-                    box.style.transform = 'translateX(100px)';
-                    box.style.transition = 'transform 1s ease-in-out';
+                .item {
+                    background-color: #38BDF8; /* Cyan акцент */
+                    color: #0F172A; /* Темный текст на акценте */
+                    padding: 12px;
+                    border-radius: 6px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 4rem; 
+                    font-size: 12px;
+                    font-family: 'JetBrains Mono', monospace; /* Применяем шрифт в демо */
                 }
-            </script>
-        `,
-        demoCss: `
-            .animate-box {
-                width: 50px;
-                height: 50px;
-                background-color: #0ea5e9;
-                margin-bottom: 15px;
-                border-radius: 4px;
-                color: white;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 12px;
-                font-family: 'JetBrains Mono', monospace;
-            }
-            .btn {
-                background-color: #38BDF8;
-                color: #0F172A;
-                padding: 8px 12px;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 14px;
-                font-family: 'JetBrains Mono', monospace;
-            }
-        `
-    },
-    {
-        id: 11,
-        question: "Какова цель использования атрибута `defer` при загрузке скриптов JavaScript, и в каком случае это имеет наибольший смысл?",
-        options: [
-            { text: "Блокировать парсинг HTML до тех пор, пока скрипт не будет загружен и выполнен.", isCorrect: false },
-            { text: "Обеспечить, что скрипт будет загружен асинхронно, но выполнен только после полной загрузки и парсинга HTML.", isCorrect: true },
-            { text: "Обеспечить, что скрипт никогда не будет кэшироваться браузером.", isCorrect: false },
-            { text: "Заставить скрипт выполняться только после события `DOMContentLoaded`.", isCorrect: false }
-        ],
-        explanation: "Атрибут `defer` гарантирует: 1. Скрипт загружается в фоновом режиме, не блокируя парсинг HTML. 2. Скрипт выполняется *только* после того, как весь HTML-документ будет разобран. Это идеально подходит для скриптов, которым нужно взаимодействовать с DOM (например, для инициализации приложения).",
-        resources: [
-            { title: "MDN: Атрибут defer для элемента `<script>`", url: "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script#defer" }
-        ],
-        demoHtml: `
-            <p>1. Парсинг HTML идет, скрипт качается в фоне.</p>
-            <p id="output-msg">2. DOM-статус: Жду выполнения скрипта...</p>
-            <script>
-                // Этот код имитирует точку, в которой скрипт с defer начал бы выполняться
-                document.getElementById('output-msg').textContent = '2. DOM-статус: HTML запарсен, defer скрипт выполняется.';
-            </script>
-            <p>3. Парсинг HTML завершен.</p>
-        `,
-        demoCss: `
-            p { font-size: 14px; margin: 4px 0; font-family: 'JetBrains Mono', monospace; }
-            #output-msg { color: #38BDF8; font-weight: bold; }
-        `
-    },
-    {
-        id: 12,
-        question: "В CSS Grid, при использовании `grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))`, что делает ключевое слово `auto-fit` в отличие от `auto-fill`?",
-        options: [
-            { text: "`auto-fit` создает пустые треки, чтобы заполнить доступное пространство.", isCorrect: false },
-            { text: "`auto-fit` схлопывает пустые треки, позволяя элементам растягиваться и заполнять все доступное пространство.", isCorrect: true },
-            { text: "Они работают абсолютно одинаково.", isCorrect: false },
-            { text: "`auto-fit` используется только для Flexbox, а `auto-fill` — для Grid.", isCorrect: false }
-        ],
-        explanation: "`auto-fit` ведет себя так же, как `auto-fill`, пока не появятся 'лишние' пустые треки. Когда треки пусты, `auto-fit` схлопывает их до 0, позволяя элементам `1fr` увеличиваться в размере, чтобы заполнить всю ширину контейнера. `auto-fill` сохраняет эти пустые треки, что приводит к неравномерному заполнению.",
-        resources: [
-            { title: "MDN: repeat() с auto-fit и auto-fill", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/repeat#auto-fit_and_auto-fill" }
-        ],
-        demoHtml: `
-            <div class="grid-container grid-fit">
-                <div class="item">Элемент 1</div>
-                <div class="item">Элемент 2</div>
-            </div>
-        `,
-        demoCss: `
-            .grid-container {
-                display: grid;
-                gap: 8px;
-                background: #1E293B;
-                padding: 10px;
-                border-radius: 6px;
-            }
-            /* auto-fit позволяет двум элементам растянуться на всю ширину */
-            .grid-fit {
-                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            }
-            .item {
-                background-color: #38BDF8; /* Cyan акцент */
-                color: #0F172A;
-                padding: 12px;
-                border-radius: 4px;
-                text-align: center;
-                font-family: 'JetBrains Mono', monospace;
-            }
-        `
-    },
-    {
-        id: 13,
-        question: "Какое свойство CSS лучше всего использовать для повышения производительности при отрисовке элементов, которые не видны на экране (например, при использовании карусели или вкладок)?",
-        options: [
-            { text: "visibility: hidden;", isCorrect: false },
-            { text: "display: none;", isCorrect: false },
-            { text: "content-visibility: auto;", isCorrect: true },
-            { text: "contain: layout;", isCorrect: false }
-        ],
-        explanation: "Свойство `content-visibility: auto` позволяет браузеру пропускать рендеринг, пересчет макета и отрисовку содержимого, которое находится за пределами области просмотра, что значительно ускоряет первоначальную загрузку и взаимодействие пользователя с большими страницами. Это гораздо более мощный инструмент для оптимизации, чем просто `display: none`.",
-        resources: [
-            { title: "MDN: content-visibility CSS property", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/content-visibility" }
-        ],
-        demoHtml: `
-            <div class="container">
-                <div class="section-visible">Секция в Вьюпорте</div>
-                <div class="section-hidden">Скрытая Секция (content-visibility: auto)</div>
-            </div>
-        `,
-        demoCss: `
-            .container { padding: 10px; background: #1E293B; border-radius: 6px; color: white; }
-            .section-visible { padding: 10px; background: #0ea5e9; color: white; margin-bottom: 10px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
-            .section-hidden {
-                padding: 10px;
-                background: #38BDF8;
-                color: #0F172A;
-                height: 50px; /* Занимает место */
-                content-visibility: auto; 
-                overflow: hidden;
-                border-radius: 4px;
-                font-size: 14px;
-                font-family: 'JetBrains Mono', monospace;
-            }
-        `
-    },
-    {
-        id: 14,
-        question: "Как можно использовать CSS Custom Properties (Переменные) для эффективной инкапсуляции стилей в контексте Веб-компонентов (Shadow DOM)?",
-        options: [
-            { text: "Используя `:host` для определения переменных, которые могут быть переопределены извне.", isCorrect: true },
-            { text: "Объявляя их с помощью `!important` внутри Shadow DOM.", isCorrect: false },
-            { text: "Используя `::part()` для доступа к элементам внутри Shadow DOM.", isCorrect: false },
-            { text: "Переменные CSS не могут проникать в Shadow DOM.", isCorrect: false }
-        ],
-        explanation: "Переменные CSS являются единственным CSS-механизмом, который позволяет стилям проникать из 'света' (Light DOM) в 'тень' (Shadow DOM). Использование `:host` для определения или установки переменных позволяет родительскому элементу в Light DOM переопределить эти переменные и стилизовать компонент извне.",
-        resources: [
-            { title: "MDN: Стилизация Веб-компонентов с помощью переменных", url: "https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_properties_in_the_shadow_tree" }
-        ],
-        demoHtml: `
-            <div class="host-component" style="--text-color: #38BDF8; --bg-color: #0F172A;">
-                <div class="inner-part">Текст, стилизованный извне</div>
-            </div>
-        `,
-        demoCss: `
-            .host-component {
-                /* Используем переменную, заданную в атрибуте style */
-                background-color: var(--bg-color, #1E293B); 
-                padding: 10px;
-                border: 1px solid #38BDF8;
-                border-radius: 6px;
-                font-size: 14px;
-                font-family: 'JetBrains Mono', monospace;
-            }
-            .inner-part {
-                /* Применяем переменную, которая 'проникает' из хоста */
-                color: var(--text-color, #94A3B8); 
-                font-weight: bold;
-            }
-        `
-    },
-    {
-        id: 15,
-        question: "В чем ключевое отличие `Resize Observer` от прослушивания события `window.onresize` в JavaScript?",
-        options: [
-            { text: "`window.onresize` не работает с Flexbox, а `Resize Observer` работает.", isCorrect: false },
-            { text: "`Resize Observer` отслеживает изменения размера любого элемента, а `window.onresize` отслеживает только Viewport.", isCorrect: true },
-            { text: "`Resize Observer` является синхронным, а `window.onresize` — асинхронным.", isCorrect: false },
-            { text: "`Resize Observer` срабатывает только один раз, а `window.onresize` — постоянно.", isCorrect: false }
-        ],
-        explanation: "`Resize Observer` — это высокопроизводительный API, предназначенный для уведомления о том, когда изменяются размеры *любого* элемента DOM, а не только области просмотра (Viewport), как это делает `window.onresize`. Он работает асинхронно, что предотвращает 'Layout Thrashing'.",
-        resources: [
-            { title: "MDN: Resize Observer API", url: "https://developer.mozilla.org/en-US/docs/Web/API/Resize_Observer_API" }
-        ],
-        demoHtml: `
-            <div class="resizable-container">
-                <div class="inner-box">Ресайзни этот блок</div>
-            </div>
-            <div id="info-resize" class="info">Размер: N/A</div>
+                .h-16 { min-height: 4rem; }
+                .h-20 { min-height: 5rem; }
+                .h-28 { min-height: 7rem; }
+                .h-32 { min-height: 8rem; }
+            `
+        },
+        // Вопрос 2
+        {
+            id: 2,
+            question: "Какое из этих свойств НЕ создает новый Контекст Стекирования (Stacking Context)?",
+            options: [
+                { text: "transform: none;", isCorrect: true }, // *Правильный ответ
+                { text: "position: fixed;", isCorrect: false },
+                { text: "filter: blur(1px);", isCorrect: false },
+                { text: "will-change: opacity;", isCorrect: false }
+            ],
+            explanation: "Свойство 'transform: none' не создает новый контекст стекирования. Любое значение 'transform', отличное от 'none' (например, 'translateY(0)'), создает новый контекст. Свойства 'position: fixed', 'filter' и 'will-change' (если его значение соответствует свойствам, создающим контекст) также создают новый контекст.",
+            resources: [
+                { title: "MDN: Понимание z-index: Контекст Стекирования", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Positioning/Understanding_z_index/The_stacking_context" }
+            ],
+            demoHtml: `
+                <div class="parent">
+                    <div class="box box-a">Box A (z-index: 10)</div>
+                    <div class="box box-b">Box B (transform: scale(1.1))</div>
+                </div>
+            `,
+            demoCss: `
+                .parent { position: relative; width: 100%; height: 100px; }
+                .box {
+                    position: absolute;
+                    width: 70px;
+                    height: 70px;
+                    color: white;
+                    padding: 8px;
+                    border-radius: 4px;
+                    display: flex;
+                    align-items: center;
+                    font-size: 10px;
+                    top: 15px;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+                .box-a {
+                    background-color: #2563EB; /* Синий */
+                    left: 10px;
+                    z-index: 10;
+                }
+                .box-b {
+                    background-color: #38BDF8; /* Cyan акцент */
+                    left: 50px;
+                    z-index: 5;
+                    /* transform: scale(1.1) создает новый Stacking Context, и Box B окажется поверх Box A, игнорируя z-index */
+                    transform: scale(1.1); 
+                }
+            `
+        },
+        // Вопрос 3
+        {
+            id: 3,
+            question: "Как можно использовать функцию `clamp()` в CSS для обеспечения минимальной ширины 300px, максимальной ширины 500px, при этом ширина должна быть 50% от родителя (в пределах min/max)?",
+            options: [
+                { text: "width: clamp(300px, 50vw, 500px);", isCorrect: true }, // *Правильный ответ
+                { text: "width: calc(min(500px, max(300px, 50%)));", isCorrect: false },
+                { text: "width: minmax(300px, 500px);", isCorrect: false },
+                { text: "width: max(300px, min(50%, 500px));", isCorrect: false }
+            ],
+            explanation: "Функция `clamp(MIN, PREFERRED, MAX)` идеально подходит для этого сценария: она устанавливает минимальное (300px) и максимальное (500px) значения, позволяя предпочтительному (50vw или 50%) значению масштабироваться между ними. (Примечание: 50vw было бы лучше, но 50% также допустимо в зависимости от контекста).",
+            resources: [
+                { title: "MDN: CSS функция clamp()", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/clamp" }
+            ],
+            demoHtml: `
+                <div class="wrapper">
+                    <div class="resizable-box">Потяни за правый нижний угол</div>
+                </div>
+            `,
+            demoCss: `
+                .wrapper { width: 90%; background: #1E293B; padding: 20px; resize: horizontal; overflow: auto; max-width: 500px; margin: 0 auto; border-radius: 6px; }
+                .resizable-box {
+                    width: clamp(100px, 50%, 400px);
+                    height: 50px;
+                    background-color: #38BDF8; /* Cyan акцент */
+                    color: #0F172A;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 4px;
+                    font-size: 14px;
+                    margin: 10px auto;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+            `
+        },
+        // Вопрос 4
+        {
+            id: 4,
+            question: "Какая из комбинаций Flexbox/Grid свойств наилучшим образом предотвращает 'Layout Thrashing' (насильственный синхронный макет) при динамическом добавлении или удалении элементов в JS?",
+            options: [
+                { text: "Использование `width: auto` и `height: auto`.", isCorrect: false },
+                { text: "Использование `grid-template-areas`.", isCorrect: false },
+                { text: "Использование `gap` вместо `margin` для создания промежутков.", isCorrect: true }, // *Правильный ответ
+                { text: "Использование `overflow: scroll`.", isCorrect: false }
+            ],
+            explanation: "Layout Thrashing — это когда JS читает, а затем записывает свойства, требующие перерасчета макета (например, `offsetWidth`, `margin`). Использование свойства `gap` (Flexbox/Grid) вместо `margin` для промежутков позволяет браузеру выполнять расчеты пространства более эффективно, как часть композиции, а не принудительного пересчета макета.",
+            resources: [
+                { title: "CSS-Tricks: Почему стоит использовать `gap` (и его связь с производительностью)", url: "https://css-tricks.com/almanac/properties/g/gap/" }
+            ],
+            demoHtml: `
+                <div class="flex-container gap-demo">
+                    <div class="item">Элемент 1</div>
+                    <div class="item">Элемент 2</div>
+                    <div class="item">Элемент 3</div>
+                </div>
+            `,
+            demoCss: `
+                .flex-container {
+                    display: flex;
+                    background: #1E293B; /* Темный фон */
+                    padding: 10px;
+                    border-radius: 6px;
+                }
+                .gap-demo {
+                    gap: 16px; /* Используем gap, более производительно */
+                }
+                .item {
+                    background-color: #38BDF8; /* Cyan акцент */
+                    color: #0F172A;
+                    padding: 12px;
+                    border-radius: 4px;
+                    flex-grow: 1;
+                    text-align: center;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+            `
+        },
+        // Вопрос 5
+        {
+            id: 5,
+            question: "Какую семантическую проблему решает использование `aria-live='polite'` в HTML?",
+            options: [
+                { text: "Обеспечивает, чтобы элемент был доступен для навигации с клавиатуры.", isCorrect: false },
+                { text: "Указывает, что содержимое элемента изменяется, и вспомогательные технологии должны объявить об этом, когда пользователь не занят.", isCorrect: true }, // *Правильный ответ
+                { text: "Создает интерактивную область, которая может быть свернута и развернута.", isCorrect: false },
+                { text: "Заставляет браузер загрузить элемент асинхронно.", isCorrect: false }
+            ],
+            explanation: "Атрибут `aria-live='polite'` используется для динамически обновляющихся областей страницы (например, счетчиков, результатов поиска, уведомлений) и указывает скринридерам, что об изменениях следует объявить, когда пользователь закончит текущую задачу, не прерывая его.",
+            resources: [
+                { title: "MDN: ARIA Live Regions", url: "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/ARIA_Live_Regions" }
+            ],
+            demoHtml: `
+                <button onclick="updateStatus()" class="btn">Запустить Апдейт</button>
+                <div id="status-message" aria-live="polite" class="status-box">Статус: Исходный</div>
 
-            <script>
-                const container = document.querySelector('.resizable-container');
-                const info = document.getElementById('info-resize');
-
-                const resizeObserver = new ResizeObserver(entries => {
-                    for (let entry of entries) {
-                        const { width, height } = entry.contentRect;
-                        info.textContent = 'Размер: ' + Math.round(width) + 'px x ' + Math.round(height) + 'px';
+                <script>
+                    let count = 0;
+                    function updateStatus() {
+                        count++;
+                        const statusBox = document.getElementById('status-message');
+                        statusBox.textContent = 'Статус: Резалт ' + count + ' успешно залит.';
                     }
-                });
+                </script>
+            `,
+            demoCss: `
+                .status-box {
+                    border: 1px solid #334155; /* Серый */
+                    padding: 10px;
+                    margin-top: 10px;
+                    border-radius: 6px;
+                    background: #1E293B; /* Темный фон */
+                    color: #94A3B8;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+                .btn {
+                    background-color: #38BDF8; /* Cyan акцент */
+                    color: #0F172A;
+                    padding: 8px 12px;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+            `
+        },
+        // Вопрос 6
+        {
+            id: 6,
+            question: "В чем основное преимущество использования `@layer` в CSS (Cascade Layers)?",
+            options: [
+                { text: "Полностью устраняет необходимость в специфичности.", isCorrect: false },
+                { text: "Позволяет отложить загрузку стилей до момента, когда они понадобятся.", isCorrect: false },
+                { text: "Обеспечивает, что порядок объявления слоев в CSS важнее специфичности селекторов внутри слоев.", isCorrect: true }, // *Правильный ответ
+                { text: "Ограничивает применение стилей определенным элементом Shadow DOM.", isCorrect: false }
+            ],
+            explanation: "Слои каскада (Cascade Layers) решают проблему специфичности: стили в более поздних слоях всегда имеют приоритет над стилями в более ранних слоях, независимо от их специфичности. Это дает разработчикам гораздо более предсказуемый контроль над CSS.",
+            resources: [
+                { title: "MDN: CSS @layer (Каскадные слои)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/@layer" }
+            ],
+            demoHtml: `
+                <div class="demo-box">Демонстрационный Блок</div>
+            `,
+            demoCss: `
+                /* Слой 'reset' */
+                @layer reset {
+                    .demo-box { background-color: #1f2937; color: white; padding: 10px; } /* Низкая специфичность */
+                }
 
-                resizeObserver.observe(container);
-            </script>
-        `,
-        demoCss: `
-            .resizable-container {
-                width: 150px;
-                height: 100px;
-                resize: both;
-                overflow: auto;
-                border: 2px solid #38BDF8;
-                padding: 10px;
-                background: #1E293B;
-                border-radius: 6px;
-            }
-            .inner-box {
-                font-size: 10px;
-                color: #38BDF8;
-                font-family: 'JetBrains Mono', monospace;
-            }
-            .info {
-                margin-top: 10px;
-                padding: 8px;
-                background-color: #0F172A;
-                border: 1px solid #38BDF8;
-                border-radius: 4px;
-                font-size: 14px;
-                color: white;
-                font-family: 'JetBrains Mono', monospace;
-            }
-        `
-    },
-    {
-        id: 16,
-        question: "Какова основная причина, по которой свойство `line-height` лучше задавать без единиц измерения (unitless, например, `1.5`), а не в пикселях или `em`?",
-        options: [
-            { text: "Браузеры игнорируют `line-height` в пикселях.", isCorrect: false },
-            { text: "Безразмерное значение является множителем, который масштабируется относительно размера шрифта элемента, а не родителя, предотвращая проблемы наследования.", isCorrect: true },
-            { text: "Это предотвращает 'Margin Collapsing'.", isCorrect: false },
-            { text: "Безразмерные значения быстрее для парсинга браузером.", isCorrect: false }
-        ],
-        explanation: "Когда `line-height` задается без единиц, он вычисляется как множитель (например, 1.5) и затем наследуется как этот множитель. Если задать его в `em` или `px`, наследуется *вычисленное* значение, которое может быть некорректно применено к дочерним элементам с другим размером шрифта. Безразмерный множитель всегда масштабируется относительно локального размера шрифта.",
-        resources: [
-            { title: "MDN: line-height (Предпочтение безразмерным числам)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/line-height#prefer_unitless_numbers_for_line-height" }
-        ],
-        demoHtml: `
-            <div class="parent-line-height-unitless">
-                Родитель (16px)
-                <div class="child-large">Потомок (24px)</div>
-            </div>
-        `,
-        demoCss: `
-            .parent-line-height-unitless {
-                font-size: 16px;
-                line-height: 1.5; /* Наследует множитель 1.5 */
-                background: #1E293B;
-                padding: 10px;
-                border-radius: 6px;
-                color: white;
-                font-family: 'JetBrains Mono', monospace;
-            }
-            .child-large {
-                font-size: 24px;
-                /* Фактическая line-height: 24px * 1.5 = 36px */
-                border: 1px solid #38BDF8;
-                margin-top: 5px;
-                padding: 3px;
-            }
-        `
-    },
-    {
-        id: 17,
-        question: "Какое из следующих утверждений верно относительно семантического использования `<picture>` в HTML?",
-        options: [
-            { text: "Он используется для ленивой загрузки изображений.", isCorrect: false },
-            { text: "Он позволяет браузеру выбрать наиболее подходящий источник изображения на основе медиа-запросов (размер, разрешение, формат).", isCorrect: true },
-            { text: "Он используется исключительно для встраивания SVG-кода.", isCorrect: false },
-            { text: "Он полностью заменяет элемент `<img>`.", isCorrect: false }
-        ],
-        explanation: "Элемент `<picture>` используется в сочетании с одним или несколькими элементами `<source>` и завершается элементом `<img>`. Он позволяет реализовать 'Art Direction' (изменение кадрирования или изображения) или 'Resolution Switching' (разные разрешения) на основе медиа-запросов, позволяя браузеру загружать только тот ресурс, который ему нужен.",
-        resources: [
-            { title: "MDN: HTML элемент <picture>", url: "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/picture" }
-        ],
-        demoHtml: `
-            <div class="image-placeholder">
-                <p>Picture для Адаптивных Изображений</p>
-                <picture>
-                    <source srcset="placeholder-small.jpg" media="(max-width: 600px)">
-                    <!-- Изображение-заглушка, так как внешние файлы недоступны -->
-                    <img src="placeholder-large.jpg" alt="Описание адаптивного изображения" class="responsive-img-sim">
-                </picture>
-            </div>
-        `,
-        demoCss: `
-            .image-placeholder {
-                border: 2px dashed #38BDF8;
-                padding: 15px;
-                text-align: center;
-                background-color: #1E293B;
-                border-radius: 6px;
-                color: white;
-                font-family: 'JetBrains Mono', monospace;
-            }
-            .responsive-img-sim {
-                max-width: 100%;
-                height: 50px; /* Имитация изображения */
-                background-color: #38BDF8;
-                color: #0F172A;
-                padding: 10px;
-                display: block;
-                margin: 5px auto 0;
-                border-radius: 4px;
-                font-family: 'JetBrains Mono', monospace;
-            }
-            p { margin: 0 0 10px 0; font-size: 14px; }
-        `
-    },
-    {
-        id: 18,
-        question: "Как можно использовать CSS, чтобы предотвратить перенос текста (word-break) в Flex/Grid-элементе, который может вызвать переполнение контейнера?",
-        options: [
-            { text: "overflow: hidden;", isCorrect: false },
-            { text: "text-overflow: ellipsis;", isCorrect: false },
-            { text: "min-width: 0; (для Flexbox) или min-height: 0; (для Flexbox);", isCorrect: true },
-            { text: "word-break: normal;", isCorrect: false }
-        ],
-        explanation: "В Flexbox/Grid по умолчанию `min-width` или `min-height` элемента устанавливается в `auto`, что позволяет его содержимому (например, очень длинному слову или URL) игнорировать ограничения Flex/Grid-контейнера. Установка `min-width: 0` для Flex-элемента (или `min-height: 0` для горизонтального Flex) позволяет ему сжиматься до 0, предотвращая переполнение.",
-        resources: [
-            { title: "MDN: Box Alignment in Flex Containers (min-size)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flexible_Box_Layout/Box_alignment_in_flex_containers#the_effect_of_min-_and_max-size_properties" }
-        ],
-        demoHtml: `
-            <div class="flex-container-overflow">
-                <div class="item-overflow item-no-fix">ЭтоОченьДлинноеСловоКотороеСломаетФлексПриMinAuto</div>
-                <div class="item-overflow item-fix">ЭтоОченьДлинноеСловоКотороеСломаетФлексПриMinAuto (Фикс)</div>
-            </div>
-        `,
-        demoCss: `
-            .flex-container-overflow {
-                display: flex;
-                width: 300px; /* Фиксированная ширина для демонстрации */
-                border: 2px solid #38BDF8;
-                padding: 10px;
-                background: #1E293B;
-                overflow: hidden; 
-                border-radius: 6px;
-                gap: 5px;
-            }
-            .item-overflow {
-                background-color: #0ea5e9;
-                color: white;
-                padding: 5px;
-                flex-basis: 50%;
-                overflow: hidden;
-                white-space: nowrap; /* Для демонстрации проблемы */
-                font-size: 12px;
-                font-family: 'JetBrains Mono', monospace;
-            }
-            .item-fix {
-                min-width: 0; /* Решает проблему 'выпирания' */
-            }
-        `
-    },
-    {
-        id: 19,
-        question: "Какая техника является предпочтительной для сокрытия элемента визуально, но сохранения его доступности для скринридеров (Screen Readers Only)?",
-        options: [
-            { text: "visibility: hidden;", isCorrect: false },
-            { text: "display: none;", isCorrect: false },
-            { text: "opacity: 0;", isCorrect: false },
-            { text: "Класс с `position: absolute`, `clip: rect(1px, 1px, 1px, 1px)`, `overflow: hidden;` и т.д.", isCorrect: true }
-        ],
-        explanation: "Специальный класс 'visually-hidden' или 'sr-only' использует комбинацию свойств (`position: absolute`, `width: 1px`, `height: 1px`, `clip`, `overflow: hidden`) для того, чтобы элемент занимал 1x1 пиксель и был невидим, но оставался в потоке DOM, позволяя скринридерам его прочитать. `display: none` скрывает элемент от всех, включая скринридеры.",
-        resources: [
-            { title: "WebAIM: CSS-техники для невидимого контента", url: "https://webaim.org/techniques/css/invisiblecontent/" }
-        ],
-        demoHtml: `
-            <p>Текст в Интерфейсе</p>
-            <p class="sr-only">Текст только для Скринридера</p>
-            <p>Еще Текст в Интерфейсе</p>
-        `,
-        demoCss: `
-            .sr-only {
-                position: absolute;
-                width: 1px;
-                height: 1px;
-                padding: 0;
-                margin: -1px;
-                overflow: hidden;
-                clip: rect(0, 0, 0, 0);
-                white-space: nowrap;
-                border-width: 0;
-                /* Для демонстрации просто дадим ему фон, но в реале он не будет виден */
-                background-color: #38BDF8;
-                font-size: 8px;
-                font-family: 'JetBrains Mono', monospace;
-            }
-            p { font-size: 14px; color: white; font-family: 'JetBrains Mono', monospace; }
-        `
-    },
-    {
-        id: 20,
-        question: "Почему использование `vh` (Viewport Height) для высоты элементов может быть проблематично на мобильных устройствах?",
-        options: [
-            { text: "Браузеры неправильно рассчитывают `vh` из-за ориентации устройства.", isCorrect: false },
-            { text: "Браузеры мобильных устройств включают высоту адресной строки в расчет `100vh`, что приводит к обрезке контента при прокрутке.", isCorrect: true },
-            { text: "Мобильные устройства не поддерживают `vh`.", isCorrect: false },
-            { text: "`vh` вызывает 'Layout Thrashing' на Android.", isCorrect: false }
-        ],
-        explanation: "На мобильных устройствах (особенно iOS Safari) адресная строка браузера может скрываться или появляться при прокрутке. `100vh` рассчитывается, исходя из полной высоты экрана, *включая* эту строку. Когда строка скрывается, доступная область просмотра увеличивается, но элемент с `100vh` не обновляется или приводит к обрезке контента. Решением является использование `dvh` (Dynamic Viewport Height) или `svh`/`lvh`.",
-        resources: [
-            { title: "MDN: Концепции единиц измерения области просмотра", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/Viewport_concepts#viewport-relative_lengths" }
-        ],
-        demoHtml: `
-            <div class="vh-demo-container">
-                <p>100vh Демо. Используй dvh/svh/lvh для нормальной работы на мобилках.</p>
-            </div>
-        `,
-        demoCss: `
-            .vh-demo-container {
-                /* Для десктопной демонстрации */
-                height: 100px; 
-                max-height: 100vh;
-                background-color: #38BDF8;
-                color: #0F172A;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 4px;
-                padding: 10px;
-                font-size: 14px;
-                text-align: center;
-                font-family: 'JetBrains Mono', monospace;
-            }
-        `
-    }
-];
+                /* Слой 'components' */
+                @layer components {
+                    .demo-box { background-color: #0c4a6e; } /* Средняя специфичность */
+                }
 
-// --- Вспомогательные стили для Clean Tech Aesthetic ---
-const techCyan = '#38BDF8'; // Sky Blue / Electric Cyan
-const darkBackground = '#0F172A'; // Dark Slate Blue (Screen background)
-const cardPrimary = '#1E293B'; // Dark Blue-Gray (Card background)
+                /* Слой 'utilities' */
+                @layer utilities {
+                    /* Этот слой побеждает предыдущие, даже если его специфичность ниже. */
+                    .demo-box { background-color: #38BDF8; } 
+                }
 
-// Стиль для легкого свечения
-const cleanGlow = {
-    boxShadow: `0 0 10px rgba(56, 189, 248, 0.5), 0 0 20px rgba(56, 189, 248, 0.2)`
-};
+                /* Базовые стили */
+                .demo-box {
+                    width: 150px;
+                    height: 50px;
+                    border-radius: 4px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin-top: 5px;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+            `
+        },
+        // Вопрос 7
+        {
+            id: 7,
+            question: "Для чего используется Web API `Intersection Observer`?",
+            options: [
+                { text: "Для отслеживания изменений размера элемента.", isCorrect: false },
+                { text: "Для обнаружения, когда элемент входит в область просмотра (Viewport) или выходит из нее.", isCorrect: true }, // *Правильный ответ
+                { text: "Для наблюдения за изменением атрибутов или дочерних элементов в DOM.", isCorrect: false },
+                { text: "Для отслеживания позиции курсора мыши над элементом.", isCorrect: false }
+            ],
+            explanation: "Intersection Observer - это асинхронный API, который позволяет эффективно определять, когда элемент 'пересекается' с областью просмотра или другим элементом-предком. Это используется для ленивой загрузки (lazy loading), инфинитного скроллинга и отслеживания рекламы, и он гораздо более производительный, чем привязка к событию `scroll`.",
+            resources: [
+                { title: "MDN: Intersection Observer API", url: "https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API" }
+            ],
+            demoHtml: `
+                <div class="scroll-area">
+                    <div class="spacer">Скролль Вниз</div>
+                    <div id="target-element" class="target">Цель (Ловлю Intersection)</div>
+                    <div class="spacer">...</div>
+                </div>
+                <div id="info" class="info">Статус: Аут-оф-Вьюпорт</div>
 
-// --- Компонент Приложения ---
-const QuizApp = () => {
-    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [selectedOption, setSelectedOption] = useState(null);
-    const [isAnswerChecked, setIsAnswerChecked] = useState(false);
-    const [score, setScore] = useState(0);
-    const [quizCompleted, setQuizCompleted] = useState(false);
+                <script>
+                    const target = document.getElementById('target-element');
+                    const info = document.getElementById('info');
 
-    // 1. Загрузка JetBrains Mono через CDN
-    useEffect(() => {
-        const link = document.createElement('link');
-        link.href = 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap';
-        link.rel = 'stylesheet';
-        document.head.appendChild(link);
+                    const observer = new IntersectionObserver(entries => {
+                        entries.forEach(entry => {
+                            if (entry.isIntersecting) {
+                                info.textContent = 'Статус: В Вьюпорте';
+                                target.style.backgroundColor = '#38BDF8';
+                            } else {
+                                info.textContent = 'Статус: Аут-оф-Вьюпорт';
+                                target.style.backgroundColor = '#2563EB';
+                            }
+                        });
+                    }, { threshold: 0.1 });
 
-        return () => {
-            document.head.removeChild(link);
-        };
-    }, []);
+                    observer.observe(target);
+                </script>
+            `,
+            demoCss: `
+                .scroll-area { height: 150px; overflow-y: scroll; border: 1px solid #334155; padding: 10px; background: #0F172A; border-radius: 6px; }
+                .spacer { height: 100px; text-align: center; color: #64748B; font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+                .target {
+                    height: 50px;
+                    background-color: #2563EB;
+                    color: white;
+                    padding: 10px;
+                    margin: 20px 0;
+                    border-radius: 4px;
+                    transition: background-color 0.3s;
+                    text-align: center;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+                .info {
+                    margin-top: 10px;
+                    padding: 8px;
+                    background-color: #0F172A;
+                    border: 1px solid #38BDF8;
+                    border-radius: 4px;
+                    font-size: 14px;
+                    color: #E2E8F0;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+            `
+        },
+        // Вопрос 8
+        {
+            id: 8,
+            question: "Какое из этих Flexbox-свойств позволяет изменить порядок элементов, НЕ изменяя их порядок в DOM (структуре документа), что важно для A11y?",
+            options: [
+                { text: "align-items", isCorrect: false },
+                { text: "justify-content", isCorrect: false },
+                { text: "order", isCorrect: true }, // *Правильный ответ
+                { text: "flex-basis", isCorrect: false }
+            ],
+            explanation: "Свойство `order` меняет визуальный порядок элементов в Flex/Grid-контейнере. Это является проблемой доступности, так как порядок чтения с помощью скринридера (Tab-последовательность) определяется порядком в DOM, а не визуальным порядком. Избегайте использования `order` для изменения логического порядка.",
+            resources: [
+                { title: "MDN: CSS order property (Проблемы доступности)", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/order#accessibility_concerns" }
+            ],
+            demoHtml: `
+                <div class="flex-container">
+                    <div class="item order-2">1. Элемент A (Order 2)</div>
+                    <div class="item order-3">2. Элемент B (Order 3)</div>
+                    <div class="item order-1">3. Элемент C (Order 1)</div>
+                </div>
+            `,
+            demoCss: `
+                .flex-container {
+                    display: flex;
+                    background: #1E293B; /* Темный фон */
+                    padding: 10px;
+                    border-radius: 6px;
+                }
+                .item {
+                    background-color: #38BDF8; /* Cyan акцент */
+                    color: #0F172A;
+                    padding: 12px;
+                    margin: 4px;
+                    border-radius: 4px;
+                    flex: 1;
+                    text-align: center;
+                    font-size: 12px;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+                .order-1 { order: 1; }
+                .order-2 { order: 2; }
+                .order-3 { order: 3; }
+            `
+        },
+        // Вопрос 9
+        {
+            id: 9,
+            question: "В чем основной побочный эффект или риск при использовании свойства `will-change` для оптимизации анимации?",
+            options: [
+                { text: "Свойство `will-change` не работает на мобильных устройствах.", isCorrect: false },
+                { text: "Немедленное создание нового контекста стекирования (Stacking Context).", isCorrect: false },
+                { text: "Увеличение потребления памяти браузером за счет принудительного создания слоя GPU, даже если анимация не запущена.", isCorrect: true }, // *Правильный ответ
+                { text: "Свойство `will-change` предотвращает использование переходов CSS.", isCorrect: false }
+            ],
+            explanation: "Если 'will-change' применяется бездумно и надолго, он может привести к перерасходу ресурсов GPU и увеличению памяти, ухудшая производительность. Его следует использовать только непосредственно перед анимацией и отключать после нее.",
+            resources: [
+                { title: "MDN: will-change CSS property", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/will-change" }
+            ],
+            demoHtml: `
+                <div class="box-note">
+                    <p>Использование <code>will-change: transform;</code> переносит элемент на GPU, что ускоряет анимацию, но может увеличить потребление памяти, если используется постоянно.</p>
+                </div>
+            `,
+            demoCss: `
+                .box-note {
+                    padding: 15px;
+                    background-color: #0F172A;
+                    border: 1px solid #38BDF8;
+                    border-radius: 6px;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+                .box-note p { font-size: 12px; margin: 0; color: #38BDF8; }
+            `
+        },
+        // Вопрос 10
+        {
+            id: 10,
+            question: "Какая из этих техник является наиболее производительной (наименьшее количество перерисовок/пересчетов макета) для создания анимации сдвига элемента (перемещение по X/Y)?",
+            options: [
+                { text: "Анимация свойства `left` или `top`.", isCorrect: false },
+                { text: "Анимация свойства `margin`.", isCorrect: false },
+                { text: "Анимация свойства `transform: translate()`.", isCorrect: true }, // *Правильный ответ
+                { text: "Анимация свойства `position: absolute`.", isCorrect: false }
+            ],
+            explanation: "Свойства `transform` и `opacity` являются 'композитными', что означает, что их анимация может быть выполнена на GPU (аппаратное ускорение) без принудительного пересчета макета (Layout) или перерисовки (Paint). Свойства `left`, `top`, `margin` и `position` вызывают дорогостоящие пересчеты макета.",
+            resources: [
+                { title: "CSS Triggers (понимание, что вызывает пересчет)", url: "https://csstriggers.com/" }
+            ],
+            demoHtml: `
+                <div class="animate-box">Двигаю</div>
+                <button onclick="startAnimation()" class="btn">Запустить Transform Анимку</button>
 
+                <script>
+                    function startAnimation() {
+                        const box = document.querySelector('.animate-box');
+                        box.style.transform = 'translateX(100px)';
+                        box.style.transition = 'transform 1s ease-in-out';
+                    }
+                </script>
+            `,
+            demoCss: `
+                .animate-box {
+                    width: 50px;
+                    height: 50px;
+                    background-color: #0ea5e9;
+                    margin-bottom: 15px;
+                    border-radius: 4px;
+                    color: white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 12px;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+                .btn {
+                    background-color: #38BDF8;
+                    color: #0F172A;
+                    padding: 8px 12px;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 14px;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+            `
+        },
+        // Вопрос 11
+        {
+            id: 11,
+            question: "Какова цель использования атрибута `defer` при загрузке скриптов JavaScript, и в каком случае это имеет наибольший смысл?",
+            options: [
+                { text: "Блокировать парсинг HTML до тех пор, пока скрипт не будет загружен и выполнен.", isCorrect: false },
+                { text: "Обеспечить, что скрипт будет загружен асинхронно, но выполнен только после полной загрузки и парсинга HTML.", isCorrect: true }, // *Правильный ответ
+                { text: "Обеспечить, что скрипт никогда не будет кэшироваться браузером.", isCorrect: false },
+                { text: "Заставить скрипт выполняться только после события `DOMContentLoaded`.", isCorrect: false }
+            ],
+            explanation: "Атрибут `defer` гарантирует: 1. Скрипт загружается в фоновом режиме, не блокируя парсинг HTML. 2. Скрипт выполняется *только* после того, как весь HTML-документ будет разобран. Это идеально подходит для скриптов, которым нужно взаимодействовать с DOM (например, для инициализации приложения).",
+            resources: [
+                { title: "MDN: Атрибут defer для элемента `<script>`", url: "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script#defer" }
+            ],
+            demoHtml: `
+                <p>1. Парсинг HTML идет, скрипт качается в фоне.</p>
+                <p id="output-msg">2. DOM-статус: Жду выполнения скрипта...</p>
+                <script>
+                    // Этот код имитирует точку, в которой скрипт с defer начал бы выполняться
+                    document.getElementById('output-msg').textContent = '2. DOM-статус: HTML запарсен, defer скрипт выполняется.';
+                </script>
+                <p>3. Парсинг HTML завершен.</p>
+            `,
+            demoCss: `
+                p { font-size: 14px; margin: 4px 0; font-family: 'JetBrains Mono', monospace; }
+                #output-msg { color: #38BDF8; font-weight: bold; }
+            `
+        },
+        // Вопрос 12
+        {
+            id: 12,
+            question: "В CSS Grid, при использовании `grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))`, что делает ключевое слово `auto-fit` в отличие от `auto-fill`?",
+            options: [
+                { text: "`auto-fit` создает пустые треки, чтобы заполнить доступное пространство.", isCorrect: false },
+                { text: "`auto-fit` схлопывает пустые треки, позволяя элементам растягиваться и заполнять все доступное пространство.", isCorrect: true }, // *Правильный ответ
+                { text: "Они работают абсолютно одинаково.", isCorrect: false },
+                { text: "`auto-fit` используется только для Flexbox, а `auto-fill` — для Grid.", isCorrect: false }
+            ],
+            explanation: "`auto-fit` ведет себя так же, как `auto-fill`, пока не появятся 'лишние' пустые треки. Когда треки пусты, `auto-fit` схлопывает их до 0, позволяя элементам `1fr` увеличиваться в размере, чтобы заполнить всю ширину контейнера. `auto-fill` сохраняет эти пустые треки, что приводит к неравномерному заполнению.",
+            resources: [
+                { title: "MDN: repeat() с auto-fit и auto-fill", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/repeat#auto-fit_and_auto-fill" }
+            ],
+            demoHtml: `
+                <div class="grid-container grid-fit">
+                    <div class="item">Элемент 1</div>
+                    <div class="item">Элемент 2</div>
+                </div>
+            `,
+            demoCss: `
+                .grid-container {
+                    display: grid;
+                    gap: 8px;
+                    background: #1E293B;
+                    padding: 10px;
+                    border-radius: 6px;
+                }
+                /* auto-fit позволяет двум элементам растянуться на всю ширину */
+                .grid-fit {
+                    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+                }
+                .item {
+                    background-color: #38BDF8; /* Cyan акцент */
+                    color: #0F172A;
+                    padding: 12px;
+                    border-radius: 4px;
+                    text-align: center;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+            `
+        },
+        // Вопрос 13
+        {
+            id: 13,
+            question: "Какое свойство CSS лучше всего использовать для повышения производительности при отрисовке элементов, которые не видны на экране (например, при использовании карусели или вкладок)?",
+            options: [
+                { text: "visibility: hidden;", isCorrect: false },
+                { text: "display: none;", isCorrect: false },
+                { text: "content-visibility: auto;", isCorrect: true }, // *Правильный ответ
+                { text: "contain: layout;", isCorrect: false }
+            ],
+            explanation: "Свойство `content-visibility: auto` позволяет браузеру пропускать рендеринг, пересчет макета и отрисовку содержимого, которое находится за пределами области просмотра, что значительно ускоряет первоначальную загрузку и взаимодействие пользователя с большими страницами. Это гораздо более мощный инструмент для оптимизации, чем просто `display: none`.",
+            resources: [
+                { title: "MDN: content-visibility CSS property", url: "https://developer.mozilla.org/en-US/docs/Web/CSS/content-visibility" }
+            ],
+            demoHtml: `
+                <div class="container">
+                    <div class="section-visible">Секция в Вьюпорте</div>
+                    <div class="section-hidden">Скрытая Секция (content-visibility: auto)</div>
+                </div>
+            `,
+            demoCss: `
+                .container { padding: 10px; background: #1E293B; border-radius: 6px; color: white; }
+                .section-visible { padding: 10px; background: #0ea5e9; color: white; margin-bottom: 10px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
+                .section-hidden {
+                    padding: 10px;
+                    background: #38BDF8;
+                    color: #0F172A;
+                    height: 50px; /* Занимает место */
+                    content-visibility: auto; 
+                    overflow: hidden;
+                    border-radius: 4px;
+                    font-size: 14px;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+            `
+        },
+        // Вопрос 14
+        {
+            id: 14,
+            question: "Как можно использовать CSS Custom Properties (Переменные) для эффективной инкапсуляции стилей в контексте Веб-компонентов (Shadow DOM)?",
+            options: [
+                { text: "Используя `:host` для определения переменных, которые могут быть переопределены извне.", isCorrect: true }, // *Правильный ответ
+                { text: "Объявляя их с помощью `!important` внутри Shadow DOM.", isCorrect: false },
+                { text: "Используя `::part()` для доступа к элементам внутри Shadow DOM.", isCorrect: false },
+                { text: "Переменные CSS не могут проникать в Shadow DOM.", isCorrect: false }
+            ],
+            explanation: "Переменные CSS являются единственным CSS-механизмом, который позволяет стилям проникать из 'света' (Light DOM) в 'тень' (Shadow DOM). Использование `:host` для определения или установки переменных позволяет родительскому элементу в Light DOM переопределить эти переменные и стилизовать компонент извне.",
+            resources: [
+                { title: "MDN: Стилизация Веб-компонентов с помощью переменных", url: "https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_properties_in_the_shadow_tree" }
+            ],
+            demoHtml: `
+                <div class="host-component" style="--text-color: #38BDF8; --bg-color: #0F172A;">
+                    <div class="inner-part">Текст, стилизованный извне</div>
+                </div>
+            `,
+            demoCss: `
+                .host-component {
+                    /* Используем переменную, заданную в атрибуте style */
+                    background-color: var(--bg-color, #1E293B); 
+                    padding: 10px;
+                    border: 1px solid #38BDF8;
+                    border-radius: 6px;
+                    font-size: 14px;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+                .inner-part {
+                    /* Применяем переменную, которая 'проникает' из хоста */
+                    color: var(--text-color, #94A3B8); 
+                    font-weight: bold;
+                }
+            `
+        },
+        // Вопрос 15
+        {
+            id: 15,
+            question: "В чем ключевое отличие `Resize Observer` от прослушивания события `window.onresize` в JavaScript?",
+            options: [
+                { text: "`window.onresize` не работает с Flexbox, а `Resize Observer` работает.", isCorrect: false },
+                { text: "`Resize Observer` отслеживает изменения размера любого элемента, а `window.onresize` отслеживает только Viewport.", isCorrect: true }, // *Правильный ответ
+                { text: "`Resize Observer` является синхронным, а `window.onresize` — асинхронным.", isCorrect: false },
+                { text: "`Resize Observer` срабатывает только один раз, а `window.onresize` — постоянно.", isCorrect: false }
+            ],
+            explanation: "`Resize Observer` — это высокопроизводительный API, предназначенный для уведомления о том, когда изменяются размеры *любого* элемента DOM, а не только области просмотра (Viewport), как это делает `window.onresize`. Он работает асинхронно, что предотвращает 'Layout Thrashing'.",
+            resources: [
+                { title: "MDN: Resize Observer API", url: "https://developer.mozilla.org/en-US/docs/Web/API/Resize_Observer_API" }
+            ],
+            demoHtml: `
+                <div class="resizable-container">
+                    <div class="inner-box">Ресайзни этот блок</div>
+                </div>
+                <div id="info-resize" class="info">Размер: N/A</div>
 
-    const currentQuestion = hardQuestions[currentQuestionIndex];
-    const totalQuestions = hardQuestions.length;
-    const fontFamilyStyle = { fontFamily: "'JetBrains Mono', monospace" };
-
-    // Сброс состояния при переходе к следующему вопросу
-    const handleNext = useCallback(() => {
-        if (currentQuestionIndex < totalQuestions - 1) {
-            setCurrentQuestionIndex(prev => prev + 1);
-            setSelectedOption(null);
-            setIsAnswerChecked(false);
-        } else {
-            setQuizCompleted(true);
+                <script>
+                    const container = document.querySelector('.resizable-container');
+                    const info = document.getElementById('info-resize');
+                    
+                    if (window.ResizeObserver) {
+                        const observer = new ResizeObserver(entries => {
+                            for (let entry of entries) {
+                                const { width, height } = entry.contentRect;
+                                info.textContent = \`Размер: \${Math.round(width)}px x \${Math.round(height)}px\`;
+                            }
+                        });
+                        observer.observe(container);
+                    } else {
+                        info.textContent = "ResizeObserver не поддерживается в этом браузере.";
+                    }
+                </script>
+            `,
+            demoCss: `
+                .resizable-container {
+                    width: 250px;
+                    height: 100px;
+                    background: #1E293B;
+                    padding: 10px;
+                    border: 1px dashed var(--color-accent-cyan);
+                    resize: horizontal;
+                    overflow: auto;
+                    border-radius: 6px;
+                }
+                .inner-box {
+                    background-color: #38BDF8;
+                    color: #0F172A;
+                    padding: 8px;
+                    border-radius: 4px;
+                    height: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 14px;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+                .info {
+                    margin-top: 10px;
+                    padding: 8px;
+                    background-color: #0F172A;
+                    border: 1px solid #38BDF8;
+                    border-radius: 4px;
+                    font-size: 14px;
+                    color: #E2E8F0;
+                    font-family: 'JetBrains Mono', monospace;
+                }
+            `
         }
-    }, [currentQuestionIndex, totalQuestions]);
+    ];
 
-    // Проверка ответа
-    const handleCheckAnswer = useCallback(() => {
-        if (selectedOption !== null && !isAnswerChecked) {
-            setIsAnswerChecked(true);
-            const isCorrect = currentQuestion.options[selectedOption].isCorrect;
-            if (isCorrect) {
-                setScore(prev => prev + 1);
-            }
-        }
-    }, [selectedOption, isAnswerChecked, currentQuestion]);
+    // --- ГЛОБАЛЬНОЕ СОСТОЯНИЕ (Вместо React Hooks) ---
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let questionsState = hardQuestions.map(q => ({
+        ...q,
+        isAnswered: false,
+        selectedOptionIndex: null
+    }));
 
-    // Вычисление содержимого iframe (Demo)
-    const demoIframeSrc = useMemo(() => {
-        if (!currentQuestion) return 'about:blank';
+    // --- DOM ЭЛЕМЕНТЫ ---
+    const quizContent = document.getElementById('quiz-content');
+    const nextButton = document.getElementById('next-button');
+    const progressText = document.getElementById('progress-text');
 
-        const styleBlock = currentQuestion.demoCss ? `<style>${currentQuestion.demoCss}</style>` : '';
-        const htmlContent = `
-            <!DOCTYPE html>
-            <html>
-                <head>
-                    <meta charset="utf-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-                    ${styleBlock}
-                    <style>
-                        /* Адаптация iframe к Tech стилю и JetBrains Mono */
-                        body { 
-                            margin: 0; 
-                            padding: 10px; 
-                            font-family: 'JetBrains Mono', monospace; /* Применяем JB Mono */
-                            background: ${darkBackground}; 
-                            color: #E2E8F0; 
-                            display: flex; 
-                            flex-direction: column; 
-                            height: 100%; 
-                            box-sizing: border-box; 
-                        }
-                    </style>
-                </head>
-                <body>
-                    ${currentQuestion.demoHtml}
-                </body>
-            </html>
-        `;
+    // --- ФУНКЦИИ УТИЛИТ (Вместо useMemo/useCallback) ---
 
-        // Безопасное кодирование HTML/CSS для srcdoc
-        return `data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`;
-    }, [currentQuestion]);
-
-    // Компонент Кнопки Опции
-    const OptionButton = ({ index, option }) => {
-        const isSelected = selectedOption === index;
-        const isCorrect = option.isCorrect;
-
-        let bgColor = 'bg-slate-700 hover:bg-slate-600';
-        let borderColor = 'border-slate-600';
-        let textColor = 'text-gray-200';
-        let icon = null;
-        let buttonStyle = { ...fontFamilyStyle };
-
-        if (isAnswerChecked) {
-            if (isCorrect) {
-                // Стиль для правильного ответа (Зеленый/Лайтовый Синий)
-                bgColor = 'bg-cyan-950 border-cyan-500';
-                textColor = 'text-cyan-400';
-                icon = <CheckCircle className="w-5 h-5" />;
-                buttonStyle = { ...buttonStyle, ...cleanGlow };
-            } else if (isSelected && !isCorrect) {
-                // Стиль для неправильного выбранного ответа (Красный)
-                bgColor = 'bg-red-950 border-red-500';
-                textColor = 'text-red-300';
-                icon = <XCircle className="w-5 h-5" />;
-            } else {
-                // Стиль для невыбранного неправильного ответа (Приглушен)
-                bgColor = 'bg-slate-800';
-                textColor = 'text-gray-500';
-                borderColor = 'border-slate-700';
-            }
-        } else if (isSelected) {
-            // Стиль для выбранной опции до проверки
-            bgColor = 'bg-cyan-900 border-cyan-400';
-            buttonStyle = { ...buttonStyle, ...cleanGlow };
-        }
-
-        return (
-            <button
-                onClick={() => !isAnswerChecked && setSelectedOption(index)}
-                className={`flex items-start p-4 text-left border rounded-lg transition-all duration-200 ${bgColor} ${borderColor} ${textColor} text-sm shadow-md`}
-                style={buttonStyle}
-                disabled={isAnswerChecked}
-            >
-                <span className="mr-3 font-semibold w-5 shrink-0 uppercase">
-                    {String.fromCharCode(65 + index)}.
-                </span>
-                <span className="flex-grow">{option.text}</span>
-                <span className="ml-3 shrink-0">{icon}</span>
-            </button>
-        );
+    // Функции для иконок (имитация lucide-react)
+    const icons = {
+        RefreshCw: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"/><path d="M2.5 22v-6h6"/><path d="M22 11.5A10 10 0 0 0 3.2 7c-1.1-1.1-1.4-2.2-1.2-3.3"/><path d="M2 12.5A10 10 0 0 0 20.8 17c1.1 1.1 1.4 2.2 1.2 3.3"/></svg>',
+        BookOpen: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+        CheckCircle: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.6-8.2"/><path d="M22 4L12 14.01l-3-3"/></svg>',
+        XCircle: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>'
     };
 
-    if (quizCompleted) {
-        return (
-            <div 
-                className={`p-8 rounded-xl max-w-2xl mx-auto my-10 text-center border-2 border-cyan-500`} 
-                style={{ backgroundColor: cardPrimary, color: '#E2E8F0', ...cleanGlow, ...fontFamilyStyle }}
-            >
-                <h2 className="text-3xl font-extrabold text-cyan-400 mb-4 uppercase tracking-wider">
-                    // КВИЗ ПРОЙДЕН. РЕЗУЛЬТАТ //
-                </h2>
-                <p className="text-xl text-gray-300 mb-6 font-bold">
-                    СКОР: <span className="text-4xl text-cyan-400">{score}</span> / {totalQuestions}
-                </p>
-                <p className="text-gray-400 mb-8">
-                    Инфа подтверждена. Твой скилл по верстке прокачан.
-                </p>
-                <button
-                    onClick={() => { setQuizCompleted(false); setScore(0); setCurrentQuestionIndex(0); setIsAnswerChecked(false); setSelectedOption(null); }}
-                    className="flex items-center justify-center mx-auto px-6 py-3 bg-cyan-500 text-slate-900 font-bold rounded-lg shadow-lg hover:bg-cyan-400 transition duration-150 uppercase tracking-widest"
-                    style={fontFamilyStyle}
-                >
-                    <RefreshCw className="w-5 h-5 mr-2" /> РЕСТАРТ КВИЗА
-                </button>
+    /**
+     * Генерирует HTML для секции объяснения и демо.
+     * @param {object} question - Объект текущего вопроса.
+     * @param {number} selectedIndex - Индекс выбранного ответа.
+     * @returns {string} HTML-строка.
+     */
+    function renderExplanation(question, selectedIndex) {
+        const correctOption = question.options.find(opt => opt.isCorrect);
+        const isCorrect = question.options[selectedIndex].isCorrect;
+
+        return `
+            <div class="explanation-section" style="border-color: var(--color-${isCorrect ? 'success' : 'error'});">
+                <h3 style="color: var(--color-${isCorrect ? 'success' : 'error'});">
+                    ${isCorrect ? icons.CheckCircle : icons.XCircle}
+                    ${isCorrect ? 'Верно!' : 'Неверно!'} (Правильный ответ: ${correctOption.text})
+                </h3>
+                <p><strong>Объяснение:</strong> ${question.explanation}</p>
+                ${question.resources && question.resources.length > 0 ? `
+                    <p><strong>Ресурсы:</strong> 
+                        ${question.resources.map(res => `<a href="${res.url}" target="_blank">${res.title}</a>`).join(', ')}
+                    </p>
+                ` : ''}
+                
+                ${question.demoHtml ? `
+                    <div class="demo-section">
+                        <h4>${icons.BookOpen} Демонстрация (Посмотри DOM/CSS)</h4>
+                        <div id="demo-output-container">
+                            ${question.demoHtml}
+                            <div class="code-block" style="margin-top: 15px;">
+                                <strong>CSS:</strong><br>
+                                <pre id="demo-styles">${question.demoCss.trim()}</pre>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
             </div>
-        );
+        `;
     }
 
-    if (!currentQuestion) return <div>Грузим вопросы...</div>;
-
-    return (
-        <div className={`flex flex-col min-h-screen`} style={{ backgroundColor: darkBackground, color: '#E2E8F0', ...fontFamilyStyle }}>
-            
-            {/* ШАПКА / ЗАГОЛОВОК */}
-            <header className="p-4 border-b border-cyan-700 mb-6 sticky top-0 z-10 shadow-lg" style={{ backgroundColor: darkBackground }}>
-                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-wider uppercase text-center text-cyan-400">
-                    Продвинутый тренинг по верстке (HARD MODE)
-                </h1>
-            </header>
-
-            <div className="flex flex-col lg:flex-row gap-6 p-4 container mx-auto">
-                {/* Левая Панель - Вопрос и Ответы */}
-                <div className="lg:w-1/2 w-full">
-                    <div className="sticky top-20 space-y-6 p-6 rounded-xl border border-cyan-700 shadow-xl" style={{ backgroundColor: cardPrimary }}>
-                        
-                        <div className="flex justify-between items-center border-b border-slate-700 pb-4 mb-4">
-                            <h1 className="text-xl font-bold text-gray-300 uppercase tracking-widest">
-                                // ВОПРОС {currentQuestionIndex + 1} / {totalQuestions}
-                            </h1>
-                            <div className="text-xl font-bold text-cyan-400 uppercase tracking-widest">
-                                СКОР: {score}
-                            </div>
-                        </div>
-
-                        <p className="text-lg font-medium text-gray-100 mb-6 tracking-wide">{currentQuestion.question}</p>
-
-                        <div className="space-y-3">
-                            {currentQuestion.options.map((option, index) => (
-                                <OptionButton key={index} index={index} option={option} />
-                            ))}
-                        </div>
-
-                        <div className="pt-4 border-t border-slate-700 mt-6">
-                            {!isAnswerChecked ? (
-                                <button
-                                    onClick={handleCheckAnswer}
-                                    disabled={selectedOption === null}
-                                    className={`w-full py-3 font-bold rounded-lg transition-all duration-200 uppercase tracking-widest ${
-                                        selectedOption !== null ? 'bg-cyan-500 text-slate-900 hover:bg-cyan-400 shadow-cyan-500/50' : 'bg-slate-700 text-gray-500 cursor-not-allowed'
-                                    }`}
-                                    style={fontFamilyStyle}
-                                >
-                                    <Zap className="w-5 h-5 inline mr-2" /> ЧЕКНУТЬ ОТВЕТ
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={handleNext}
-                                    className="w-full py-3 font-bold rounded-lg bg-cyan-500 text-slate-900 hover:bg-cyan-400 transition-colors duration-150 uppercase tracking-widest shadow-cyan-500/50"
-                                    style={fontFamilyStyle}
-                                >
-                                    {currentQuestionIndex < totalQuestions - 1 ? 'ДАЛЬШЕ >>' : 'ФИНИШ >>'}
-                                </button>
-                            )}
-                        </div>
-
-                        {isAnswerChecked && (
-                            <div className="mt-6 p-4 bg-slate-800 border-l-4 border-cyan-500 rounded-md shadow-inner">
-                                <h3 className="text-lg font-semibold text-cyan-400 mb-2 uppercase tracking-widest">// РЕЗУЛЬТАТ ЧЕКА</h3>
-                                <p className="text-gray-300 text-sm mb-4">{currentQuestion.explanation}</p>
-                                
-                                <h4 className="flex items-center text-sm font-bold text-cyan-400 mb-2 uppercase border-t border-slate-700 pt-3 tracking-widest">
-                                    <BookOpen className="w-4 h-4 mr-2" />
-                                    ЛИНКИ/ДОКИ:
-                                </h4>
-                                <ul className="space-y-1 text-sm">
-                                    {currentQuestion.resources.map((resource, index) => (
-                                        <li key={index}>
-                                            <a 
-                                                href={resource.url} 
-                                                target="_blank" 
-                                                rel="noopener noreferrer" 
-                                                className="text-cyan-400 hover:text-cyan-300 underline transition duration-150"
-                                            >
-                                                {resource.title}
-                                            </a>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-                    </div>
+    /**
+     * Отрисовывает текущий вопрос или финальные результаты.
+     */
+    function renderQuiz() {
+        // --- Финальные результаты ---
+        if (currentQuestionIndex >= questionsState.length) {
+            quizContent.innerHTML = `
+                <div class="results-section">
+                    <h2>Тест Завершен! 🎉</h2>
+                    <p>Вы ответили на все ${questionsState.length} вопросов.</p>
+                    <p>Ваш результат:</p>
+                    <div class="score-display" style="color: var(--color-${score >= questionsState.length / 2 ? 'success' : 'error'});">${score} / ${questionsState.length}</div>
+                    <p>Поздравляем с прохождением продвинутой Frontend викторины!</p>
+                    <button id="restart-button" class="btn" style="background-color: var(--color-accent-cyan); color: var(--color-bg-dark);">
+                        ${icons.RefreshCw} Начать Сначала
+                    </button>
                 </div>
+            `;
+            nextButton.style.display = 'none';
+            document.getElementById('restart-button').addEventListener('click', restartQuiz);
+            progressText.textContent = '';
+            return;
+        }
 
-                {/* Правая Панель - Живой Демонстратор (Код Сверху, Результат Снизу) */}
-                <div className="lg:w-1/2 w-full flex flex-col space-y-6">
-                    <div className="p-4 rounded-xl border border-cyan-700 shadow-xl" style={{ backgroundColor: cardPrimary }}>
-                        <h2 className="text-xl font-bold text-cyan-400 mb-4 border-b border-slate-700 pb-2 uppercase tracking-widest">
-                            <Zap className="w-5 h-5 inline mr-2" /> ЛАЙВ ДЕМКА
-                        </h2>
-                        
-                        <div className="flex flex-col gap-4">
-                            
-                            {/* 1. Код Демонстрации */}
-                            <div className="w-full">
-                                <h3 className="text-md font-medium text-gray-400 mb-2 uppercase">КОД (CSS/HTML)</h3>
-                                <div className="bg-slate-900 p-3 rounded-lg overflow-auto text-xs text-cyan-300 max-h-48 whitespace-pre-wrap border border-slate-700">
-                                    <pre>{currentQuestion.demoCss + '\n\n' + currentQuestion.demoHtml}</pre>
-                                </div>
-                            </div>
+        // --- Текущий вопрос ---
+        const question = questionsState[currentQuestionIndex];
+        const isAnswered = question.isAnswered;
 
-                            {/* 2. Результат (iframe) */}
-                            <div className="w-full">
-                                <h3 className="text-md font-medium text-gray-400 mb-2 uppercase">РЕЗУЛЬТ</h3>
-                                <div className="border-2 border-cyan-500 rounded-lg overflow-hidden bg-black h-48 w-full shadow-lg">
-                                    <iframe
-                                        key={currentQuestion.id} 
-                                        src={demoIframeSrc}
-                                        className="w-full h-full border-none"
-                                        title="Live Demo"
-                                        sandbox="allow-scripts allow-same-origin"
-                                    ></iframe>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        progressText.textContent = `Вопрос ${currentQuestionIndex + 1} из ${questionsState.length} (Счет: ${score})`;
+
+        let optionsHtml = question.options.map((option, index) => {
+            let classes = 'option-btn btn';
+            let disabled = '';
+
+            if (isAnswered) {
+                disabled = 'disabled';
+                if (question.selectedOptionIndex === index) {
+                    classes += option.isCorrect ? ' correct' : ' incorrect';
+                } else if (option.isCorrect) {
+                    classes += ' correct';
+                }
+            }
+
+            return `<button class="${classes}" data-index="${index}" ${disabled}>${option.text}</button>`;
+        }).join('');
+
+        let explanationHtml = isAnswered ? renderExplanation(question, question.selectedOptionIndex) : '';
+        nextButton.style.display = isAnswered ? 'flex' : 'none';
+
+        quizContent.innerHTML = `
+            <div class="question-card">
+                <p class="question-text">${currentQuestionIndex + 1}. ${question.question}</p>
+                <div id="options-container">
+                    ${optionsHtml}
                 </div>
             </div>
-            
-            {/* Футер для эстетики */}
-            <footer className="mt-12 p-4 text-center border-t border-slate-800" style={{ backgroundColor: darkBackground }}>
-                <p className="text-xs text-slate-700 uppercase tracking-widest">
-                    // СТАТУС: ПРОЦЕСС ВЫПОЛНЕН. ГЛХФ. //
-                </p>
-            </footer>
+            ${explanationHtml}
+        `;
 
-        </div>
-    );
-};
+        // --- Обработчики событий ---
+        if (!isAnswered) {
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.addEventListener('click', handleAnswerSelect);
+        }
+        nextButton.onclick = nextQuestion;
+    }
 
-export default QuizApp;
+    /**
+     * Обрабатывает выбор ответа пользователем.
+     * @param {Event} event - Событие клика.
+     */
+    function handleAnswerSelect(event) {
+        if (!event.target.classList.contains('option-btn')) return;
+
+        const selectedIndex = parseInt(event.target.dataset.index);
+        const question = questionsState[currentQuestionIndex];
+        const selectedOption = question.options[selectedIndex];
+
+        // Обновление состояния
+        questionsState[currentQuestionIndex].isAnswered = true;
+        questionsState[currentQuestionIndex].selectedOptionIndex = selectedIndex;
+
+        if (selectedOption.isCorrect) {
+            score++;
+        }
+
+        // Перерисовка
+        renderQuiz();
+    }
+
+    /**
+     * Переходит к следующему вопросу.
+     */
+    function nextQuestion() {
+        currentQuestionIndex++;
+        // Прокрутка наверх при переходе к новому вопросу
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        renderQuiz();
+    }
+
+    /**
+     * Перезапускает викторину.
+     */
+    function restartQuiz() {
+        currentQuestionIndex = 0;
+        score = 0;
+        // Сброс состояния вопросов
+        questionsState = hardQuestions.map(q => ({
+            ...q,
+            isAnswered: false,
+            selectedOptionIndex: null
+        }));
+        renderQuiz();
+    }
+
+    // --- Инициализация (Вместо useEffect) ---
+    document.addEventListener('DOMContentLoaded', renderQuiz);
+
+    // ВАЖНО: Код для скриптов в DEMO!
+    // Поскольку встроенный <script> не запускается, мы должны вынести функции в глобальный скоуп.
+    // Функция updateStatus для Вопроса 5
+    window.updateStatus = function() {
+        let count = 0; // Начинаем с 0, чтобы первый клик дал 1
+        const statusBox = document.getElementById('status-message');
+        
+        // Проверяем, существует ли уже глобальный счетчик для этого демо
+        if (typeof window._statusCount === 'undefined') {
+            window._statusCount = 0;
+        }
+
+        window._statusCount++;
+        statusBox.textContent = 'Статус: Резалт ' + window._statusCount + ' успешно залит.';
+    }
+
+    // Функция startAnimation для Вопроса 10
+    window.startAnimation = function() {
+        const box = document.querySelector('.animate-box');
+        if (box) {
+            // Если он уже перемещен, возвращаем обратно (для повторного клика)
+            const currentTransform = box.style.transform;
+            if (currentTransform === 'translateX(100px)') {
+                box.style.transform = 'translateX(0px)';
+            } else {
+                box.style.transform = 'translateX(100px)';
+            }
+            box.style.transition = 'transform 1s ease-in-out';
+        }
+    }
+
+</script>
+
+</body>
+</html>
